@@ -1,8 +1,8 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '4.0.7'
+	id 'org.springframework.boot' version '3.5.5'
 	id 'io.spring.dependency-management' version '1.1.7'
-	id 'org.springframework.cloud.contract' version '5.0.3'
+	id 'org.springframework.cloud.contract' version '4.3.0'
 	id 'jacoco'
 }
 
@@ -20,14 +20,22 @@ repositories {
 }
 
 ext {
-	set('springCloudVersion', "2025.1.2")
+	set('springCloudVersion', "2025.0.0")
 }
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
-	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
-	testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.cloud:spring-cloud-starter-contract-verifier'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
@@ -39,7 +47,7 @@ dependencyManagement {
 }
 
 contracts {
-	testFramework = 'JUNIT5'
+	packageWithBaseClasses = "com.eskcti.algashop.product.catalog.contract.base"
 }
 
 tasks.named('test') {
