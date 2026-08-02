@@ -2,6 +2,8 @@ package com.eskcti.algashop.product.catalog.application.product.query;
 
 import org.springframework.stereotype.Service;
 
+import com.eskcti.algashop.product.catalog.application.PageModel;
+
 import java.util.UUID;
 
 @Service

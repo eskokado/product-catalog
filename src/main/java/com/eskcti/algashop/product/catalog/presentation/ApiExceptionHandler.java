@@ -1,6 +1,5 @@
 package com.eskcti.algashop.product.catalog.presentation;
 
-import com.eskcti.algashop.product.catalog.application.product.ResourceNotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
@@ -12,6 +11,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+
+import com.eskcti.algashop.product.catalog.application.ResourceNotFoundException;
 
 import java.net.URI;
 import java.util.Map;

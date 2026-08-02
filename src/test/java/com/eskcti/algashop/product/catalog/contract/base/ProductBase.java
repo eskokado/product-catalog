@@ -1,10 +1,10 @@
 package com.eskcti.algashop.product.catalog.contract.base;
 
-import com.eskcti.algashop.product.catalog.application.product.ResourceNotFoundException;
+import com.eskcti.algashop.product.catalog.application.PageModel;
+import com.eskcti.algashop.product.catalog.application.ResourceNotFoundException;
 import com.eskcti.algashop.product.catalog.application.product.management.ProductInput;
 import com.eskcti.algashop.product.catalog.application.product.management.ProductManagementApplicationService;
 import com.eskcti.algashop.product.catalog.application.product.query.CategoryMinimalOutput;
-import com.eskcti.algashop.product.catalog.application.product.query.PageModel;
 import com.eskcti.algashop.product.catalog.application.product.query.ProductDetailOutput;
 import com.eskcti.algashop.product.catalog.application.product.query.ProductDetailOutputTestDataBuilder;
 import com.eskcti.algashop.product.catalog.application.product.query.ProductQueryService;

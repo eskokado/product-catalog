@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.eskcti.algashop.product.catalog.application.PageModel;
 import com.eskcti.algashop.product.catalog.application.product.management.ProductInput;
 import com.eskcti.algashop.product.catalog.application.product.management.ProductManagementApplicationService;
-import com.eskcti.algashop.product.catalog.application.product.query.PageModel;
 import com.eskcti.algashop.product.catalog.application.product.query.ProductDetailOutput;
 import com.eskcti.algashop.product.catalog.application.product.query.ProductQueryService;
 
