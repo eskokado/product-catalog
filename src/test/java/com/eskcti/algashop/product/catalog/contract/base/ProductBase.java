@@ -1,5 +1,6 @@
 package com.eskcti.algashop.product.catalog.contract.base;
 
+import com.eskcti.algashop.product.catalog.application.product.ResourceNotFoundException;
 import com.eskcti.algashop.product.catalog.application.product.management.ProductInput;
 import com.eskcti.algashop.product.catalog.application.product.management.ProductManagementApplicationService;
 import com.eskcti.algashop.product.catalog.application.product.query.CategoryMinimalOutput;
@@ -24,74 +25,86 @@ import java.util.UUID;
 @WebMvcTest(controllers = ProductController.class)
 public class ProductBase {
 
-    @Autowired
-    private WebApplicationContext context;
+        @Autowired
+        private WebApplicationContext context;
 
-    @MockitoBean
-    private ProductQueryService productQueryService;
+        @MockitoBean
+        private ProductQueryService productQueryService;
 
-    @MockitoBean
-    private ProductManagementApplicationService productManagementApplicationService;
+        @MockitoBean
+        private ProductManagementApplicationService productManagementApplicationService;
 
-    public static final UUID validProductId = UUID.fromString("fffe6ec2-7103-48b3-8e4f-3b58e43fb75a");
+        public static final UUID validProductId = UUID.fromString("fffe6ec2-7103-48b3-8e4f-3b58e43fb75a");
 
-    public static final UUID createdProductId = UUID.fromString("21651a12-b126-4213-ac21-19f66ff4642e");
+        public static final UUID createdProductId = UUID.fromString("f7c6843f-465c-476d-9a9b-4783bde4dc5e");
 
-    public static final UUID createdProductCategoryId = UUID.fromString("f5ab7a1e-37da-41e1-892b-a1d38275c2f2");
+        public static final UUID createdProductCategoryId = UUID.fromString("f5ab7a1e-37da-41e1-892b-a1d38275c2f2");
 
-    @BeforeEach
-    void setUp() {
-        RestAssuredMockMvc.mockMvc(MockMvcBuilders.webAppContextSetup(context)
-                .defaultResponseCharacterEncoding(StandardCharsets.UTF_8).build());
+        public static final UUID invalidProductId = UUID.fromString("21651a12-b126-4213-ac21-19f66ff4642e");
 
-        RestAssuredMockMvc.enableLoggingOfRequestAndResponseIfValidationFails();
+        @BeforeEach
+        void setUp() {
+                RestAssuredMockMvc.mockMvc(MockMvcBuilders.webAppContextSetup(context)
+                                .defaultResponseCharacterEncoding(StandardCharsets.UTF_8).build());
 
-        mockValidOrderFindById();
-        mockFilterProducts();
-        mockCreateProduct();
-    }
+                RestAssuredMockMvc.enableLoggingOfRequestAndResponseIfValidationFails();
 
-    private void mockCreateProduct() {
-        Mockito.when(productManagementApplicationService.create(Mockito.any(ProductInput.class)))
-                .thenReturn(createdProductId);
+                mockValidOrderFindById();
+                mockFilterProducts();
+                mockCreateProduct();
+                mockInvalidProductFindById();
+        }
 
-        Mockito.when(productQueryService.findById(createdProductId))
-                .thenReturn(ProductDetailOutputTestDataBuilder.aProduct()
-                        .id(createdProductId)
-                        .inStock(false)
-                        .description("A Gamer Notebook!")
-                        .category(CategoryMinimalOutput.builder()
-                                .id(createdProductCategoryId)
-                                .name("Notebook")
-                                .build())
-                        .build());
-    }
+        private void mockInvalidProductFindById() {
+                Mockito.when(productQueryService.findById(invalidProductId))
+                                .thenThrow(new ResourceNotFoundException());
+        }
 
-    private void mockFilterProducts() {
-        Mockito.when(productQueryService.filter(
-                Mockito.anyInt(), Mockito.anyInt()))
-                .then((answer) -> {
-                    Integer size = answer.getArgument(0);
+        private void mockCreateProduct() {
+                Mockito.when(productManagementApplicationService.create(Mockito.any(ProductInput.class)))
+                                .thenReturn(createdProductId);
 
-                    return PageModel.<ProductDetailOutput>builder()
-                            .number(0)
-                            .size(size)
-                            .totalPages(1)
-                            .totalElements(2)
-                            .content(
-                                    List.of(
-                                            ProductDetailOutputTestDataBuilder.aProduct().build(),
-                                            ProductDetailOutputTestDataBuilder.aProductAlt1().build()))
-                            .build();
-                });
-    }
+                Mockito.when(productQueryService.findById(createdProductId))
+                                .thenReturn(ProductDetailOutputTestDataBuilder.aProduct()
+                                                .id(createdProductId)
+                                                .inStock(false)
+                                                .description("A Gamer Notebook!")
+                                                .category(CategoryMinimalOutput.builder()
+                                                                .id(createdProductCategoryId)
+                                                                .name("Notebook")
+                                                                .build())
+                                                .build());
+        }
 
-    private void mockValidOrderFindById() {
-        Mockito.when(productQueryService.findById(validProductId))
-                .thenReturn(ProductDetailOutputTestDataBuilder.aProduct()
-                        .id(validProductId)
-                        .inStock(false)
-                        .build());
-    }
+        private void mockFilterProducts() {
+                Mockito.when(productQueryService.filter(
+                                Mockito.anyInt(), Mockito.anyInt()))
+                                .then((answer) -> {
+                                        Integer size = answer.getArgument(0);
+
+                                        return PageModel.<ProductDetailOutput>builder()
+                                                        .number(0)
+                                                        .size(size)
+                                                        .totalPages(1)
+                                                        .totalElements(2)
+                                                        .content(
+                                                                        List.of(
+                                                                                        ProductDetailOutputTestDataBuilder
+                                                                                                        .aProduct()
+                                                                                                        .build(),
+                                                                                        ProductDetailOutputTestDataBuilder
+                                                                                                        .aProductAlt1()
+                                                                                                        .build()))
+                                                        .build();
+                                });
+        }
+
+        private void mockValidOrderFindById() {
+                Mockito.when(productQueryService.findById(validProductId))
+                                .thenReturn(ProductDetailOutputTestDataBuilder.aProduct()
+                                                .id(validProductId)
+                                                .inStock(false)
+                                                .build());
+        }
 
 }
