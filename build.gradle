@@ -101,7 +101,7 @@ jacocoTestReport {
 }
 
 jacocoTestCoverageVerification {
-	dependsOn jacocoTestReport
+	dependsOn test, contractTest
 	executionData(test, contractTest)
 	violationRules {
 		rule {
