@@ -1,14 +1,14 @@
-package com.eskcti.algashop.product.catalog.application.product.query;
-
-import org.springframework.stereotype.Service;
+package com.eskcti.algashop.product.catalog.infrastructure.persistence.product;
 
 import com.eskcti.algashop.product.catalog.application.PageModel;
+import com.eskcti.algashop.product.catalog.application.product.query.ProductDetailOutput;
+import com.eskcti.algashop.product.catalog.application.product.query.ProductQueryService;
+import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
 @Service
 public class ProductQueryServiceImpl implements ProductQueryService {
-
     @Override
     public ProductDetailOutput findById(UUID productId) {
         return null;
