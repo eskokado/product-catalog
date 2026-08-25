@@ -4,4 +4,4 @@ spring:
   application:
     name: product-catalog
   mongodb:
-    uri: mongodb://localhost:27017/product-catalog?authSource=admin
+    uri: mongodb://root:algashop@localhost:27017/product-catalog?authSource=admin&uuidRepresentation=standard
