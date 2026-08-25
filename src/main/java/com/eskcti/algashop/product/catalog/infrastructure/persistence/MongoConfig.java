@@ -1,5 +1,7 @@
 package com.eskcti.algashop.product.catalog.infrastructure.persistence;
 
+import org.bson.UuidRepresentation;
+import org.springframework.boot.mongodb.autoconfigure.MongoClientSettingsBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
@@ -14,6 +16,11 @@ import java.util.List;
 
 @Configuration
 public class MongoConfig {
+
+    @Bean
+    public MongoClientSettingsBuilderCustomizer uuidCustomizer() {
+        return builder -> builder.uuidRepresentation(UuidRepresentation.STANDARD);
+    }
 
     @Bean
     public MongoCustomConversions mongoCustomConversions() {
