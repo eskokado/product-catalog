@@ -1,5 +1,6 @@
 package com.eskcti.algashop.product.catalog.domain.model.category;
 
+import com.eskcti.algashop.product.catalog.domain.model.IdGenerator;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -31,7 +32,7 @@ public class Category {
     private OffsetDateTime updatedAt;
 
     public Category(String name, Boolean enabled) {
-        this.id = UUID.randomUUID();
+        this.id = IdGenerator.generateTimeBasedUUID();
         this.setName(name);
         this.setEnabled(enabled);
         this.createdAt = OffsetDateTime.now();
