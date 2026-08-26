@@ -1,14 +1,47 @@
 package com.eskcti.algashop.product.catalog.application.product.management;
 
+import com.eskcti.algashop.product.catalog.application.ResourceNotFoundException;
+import com.eskcti.algashop.product.catalog.domain.model.category.Category;
+import com.eskcti.algashop.product.catalog.domain.model.category.CategoryNotFoundException;
+import com.eskcti.algashop.product.catalog.domain.model.category.CategoryRepository;
+import com.eskcti.algashop.product.catalog.domain.model.product.Product;
+import com.eskcti.algashop.product.catalog.domain.model.product.ProductRepository;
+import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class ProductManagementApplicationService {
+
+    private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
+
     public UUID create(ProductInput input) {
-        return null;
+        Product product = mapToProduct(input);
+        productRepository.save(product);
+        return product.getId();
     }
+
+    private Product mapToProduct(ProductInput input) {
+        Category category = findCategory(input.getCategoryId());
+        return Product.builder()
+                .name(input.getName())
+                .brand(input.getBrand())
+                .description(input.getDescription())
+                .regularPrice(input.getRegularPrice())
+                .salePrice(input.getSalePrice())
+                .enabled(input.getEnabled())
+                .build();
+    }
+
+    private Category findCategory(@NotNull UUID categoryId) {
+        return categoryRepository.findById(categoryId).orElseThrow(()-> new CategoryNotFoundException(categoryId));
+    }
+
 
     public void update(UUID productId, ProductInput input) {
 
