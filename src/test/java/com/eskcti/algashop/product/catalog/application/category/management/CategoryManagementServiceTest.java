@@ -1,6 +1,6 @@
 package com.eskcti.algashop.product.catalog.application.category.management;
 
-import com.eskcti.algashop.product.catalog.application.ResourceNotFoundException;
+import com.eskcti.algashop.product.catalog.domain.model.DomainEntityNotFoundException;
 import com.eskcti.algashop.product.catalog.domain.model.category.Category;
 import com.eskcti.algashop.product.catalog.domain.model.category.CategoryRepository;
 import org.junit.jupiter.api.Test;
@@ -70,7 +70,7 @@ class CategoryManagementServiceTest {
                 .build();
 
         assertThatThrownBy(() -> service.update(categoryId, input))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(DomainEntityNotFoundException.class);
         Mockito.verify(categoryRepository, Mockito.never()).save(Mockito.any());
     }
 
@@ -80,7 +80,7 @@ class CategoryManagementServiceTest {
         Mockito.when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.disable(categoryId))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(DomainEntityNotFoundException.class);
         Mockito.verify(categoryRepository, Mockito.never()).save(Mockito.any());
     }
 }

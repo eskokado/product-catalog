@@ -1,6 +1,6 @@
 package com.eskcti.algashop.product.catalog.application.category.query;
 
-import com.eskcti.algashop.product.catalog.application.ResourceNotFoundException;
+import com.eskcti.algashop.product.catalog.domain.model.DomainEntityNotFoundException;
 import com.eskcti.algashop.product.catalog.application.utility.Mapper;
 import com.eskcti.algashop.product.catalog.domain.model.category.Category;
 import com.eskcti.algashop.product.catalog.domain.model.category.CategoryRepository;
@@ -47,6 +47,6 @@ class CategoryQueryServiceImplTest {
         Mockito.when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
 
         assertThatCode(() -> service.findById(categoryId))
-                .isInstanceOf(ResourceNotFoundException.class);
+                .isInstanceOf(DomainEntityNotFoundException.class);
     }
 }
