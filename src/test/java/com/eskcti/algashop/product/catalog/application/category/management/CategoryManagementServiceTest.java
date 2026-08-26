@@ -1,38 +1,86 @@
 package com.eskcti.algashop.product.catalog.application.category.management;
 
+import com.eskcti.algashop.product.catalog.application.ResourceNotFoundException;
+import com.eskcti.algashop.product.catalog.domain.model.category.Category;
+import com.eskcti.algashop.product.catalog.domain.model.category.CategoryRepository;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class CategoryManagementServiceTest {
 
-    private final CategoryManagementService service = new CategoryManagementService();
+    private final CategoryRepository categoryRepository = Mockito.mock(CategoryRepository.class);
+    private final CategoryManagementService service = new CategoryManagementService(categoryRepository);
 
     @Test
-    void shouldCreateCategoryReturningNullUntilPersistenceIsImplemented() {
+    void shouldCreateCategoryAndReturnGeneratedId() {
         CategoryInput input = CategoryInput.builder()
                 .name("Notebook")
                 .enabled(true)
                 .build();
 
-        assertThat(service.create(input)).isNull();
+        UUID createdId = service.create(input);
+
+        ArgumentCaptor<Category> captor = ArgumentCaptor.forClass(Category.class);
+        Mockito.verify(categoryRepository).save(captor.capture());
+        assertThat(createdId).isEqualTo(captor.getValue().getId());
     }
 
     @Test
-    void shouldAcceptUpdateWithoutSideEffectsUntilPersistenceIsImplemented() {
+    void shouldUpdateCategory() {
+        Category category = new Category("Notebook", true);
+        CategoryInput input = CategoryInput.builder()
+                .name("Notebook Gamer")
+                .enabled(false)
+                .build();
+        Mockito.when(categoryRepository.findById(category.getId())).thenReturn(Optional.of(category));
+
+        service.update(category.getId(), input);
+
+        assertThat(category.getName()).isEqualTo("Notebook Gamer");
+        assertThat(category.getEnabled()).isFalse();
+        Mockito.verify(categoryRepository).save(category);
+    }
+
+    @Test
+    void shouldDisableCategory() {
+        Category category = new Category("Notebook", true);
+        Mockito.when(categoryRepository.findById(category.getId())).thenReturn(Optional.of(category));
+
+        service.disable(category.getId());
+
+        assertThat(category.getEnabled()).isFalse();
+        Mockito.verify(categoryRepository).save(category);
+    }
+
+    @Test
+    void shouldThrowWhenUpdatingNonExistentCategory() {
+        UUID categoryId = UUID.randomUUID();
+        Mockito.when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
         CategoryInput input = CategoryInput.builder()
                 .name("Notebook")
                 .enabled(true)
                 .build();
 
-        assertThatCode(() -> service.update(UUID.randomUUID(), input)).doesNotThrowAnyException();
+        assertThatThrownBy(() -> service.update(categoryId, input))
+                .isInstanceOf(ResourceNotFoundException.class);
+        Mockito.verify(categoryRepository, Mockito.never()).save(Mockito.any());
     }
 
     @Test
-    void shouldAcceptDisableWithoutSideEffectsUntilPersistenceIsImplemented() {
-        assertThatCode(() -> service.disable(UUID.randomUUID())).doesNotThrowAnyException();
+    void shouldThrowWhenDisablingNonExistentCategory() {
+        UUID categoryId = UUID.randomUUID();
+        Mockito.when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.disable(categoryId))
+                .isInstanceOf(ResourceNotFoundException.class);
+        Mockito.verify(categoryRepository, Mockito.never()).save(Mockito.any());
     }
 }

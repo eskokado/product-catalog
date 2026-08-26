@@ -6,6 +6,8 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.eskcti.algashop.product.catalog.infrastructure.persistence.product.ProductQueryServiceImpl;
+
 class ProductQueryServiceImplTest {
 
     private final ProductQueryServiceImpl service = new ProductQueryServiceImpl();
