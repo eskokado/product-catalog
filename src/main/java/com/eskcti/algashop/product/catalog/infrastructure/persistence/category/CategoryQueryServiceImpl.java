@@ -4,6 +4,7 @@ import com.eskcti.algashop.product.catalog.application.PageModel;
 import com.eskcti.algashop.product.catalog.application.ResourceNotFoundException;
 import com.eskcti.algashop.product.catalog.application.category.query.CategoryDetailOutput;
 import com.eskcti.algashop.product.catalog.application.category.query.CategoryQueryService;
+import com.eskcti.algashop.product.catalog.domain.model.category.CategoryNotFoundException;
 import com.eskcti.algashop.product.catalog.application.utility.Mapper;
 import com.eskcti.algashop.product.catalog.domain.model.category.Category;
 import com.eskcti.algashop.product.catalog.domain.model.category.CategoryRepository;
@@ -27,7 +28,7 @@ public class CategoryQueryServiceImpl implements CategoryQueryService {
     @Override
     public CategoryDetailOutput findById(UUID categoryId) {
         Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new ResourceNotFoundException());
+                .orElseThrow(() -> new CategoryNotFoundException(categoryId));
         return mapper.convert(category, CategoryDetailOutput.class);
     }
 }
