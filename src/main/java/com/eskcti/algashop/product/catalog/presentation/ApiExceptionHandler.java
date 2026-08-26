@@ -1,5 +1,9 @@
 package com.eskcti.algashop.product.catalog.presentation;
 
+
+import com.eskcti.algashop.product.catalog.application.ResourceNotFoundException;
+import com.eskcti.algashop.product.catalog.domain.model.DomainEntityNotFoundException;
+import com.eskcti.algashop.product.catalog.domain.model.DomainException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
@@ -11,8 +15,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
-
-import com.eskcti.algashop.product.catalog.application.ResourceNotFoundException;
 
 import java.net.URI;
 import java.util.Map;
@@ -46,12 +48,21 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
                 return super.handleExceptionInternal(ex, problemDetail, headers, status, request);
         }
 
-        @ExceptionHandler(ResourceNotFoundException.class)
-        public ProblemDetail handleResourceNotFoundException(ResourceNotFoundException e) {
+        @ExceptionHandler({DomainEntityNotFoundException.class, ResourceNotFoundException.class})
+        public ProblemDetail handleResourceNotFoundException(Exception exception) {
                 ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
                 problemDetail.setTitle("Not found");
-                problemDetail.setDetail(e.getMessage());
+                problemDetail.setDetail(exception.getMessage());
                 problemDetail.setType(URI.create("/errors/not-found"));
+                return problemDetail;
+        }
+
+        @ExceptionHandler({DomainException.class, UnprocessableContentException.class})
+        public ProblemDetail handleUnprocessableContentException(Exception e) {
+                ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.UNPROCESSABLE_CONTENT);
+                problemDetail.setTitle("Unprocessable Content");
+                problemDetail.setDetail(e.getMessage());
+                problemDetail.setType(URI.create("/errors/unprocessable-content"));
                 return problemDetail;
         }
 

@@ -4,22 +4,14 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.eskcti.algashop.product.catalog.application.PageModel;
 import com.eskcti.algashop.product.catalog.application.product.management.ProductInput;
 import com.eskcti.algashop.product.catalog.application.product.management.ProductManagementApplicationService;
 import com.eskcti.algashop.product.catalog.application.product.query.ProductDetailOutput;
 import com.eskcti.algashop.product.catalog.application.product.query.ProductQueryService;
+import com.eskcti.algashop.product.catalog.domain.model.category.CategoryNotFoundException;
 
 import java.util.UUID;
 
@@ -34,7 +26,12 @@ public class ProductController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ProductDetailOutput create(@RequestBody @Valid ProductInput input) {
-        UUID productId = productManagementApplicationService.create(input);
+        UUID productId;
+        try {
+            productId = productManagementApplicationService.create(input);
+        } catch (CategoryNotFoundException e) {
+            throw new UnprocessableContentException(e.getMessage(), e);
+        }
         return productQueryService.findById(productId);
     }
 
