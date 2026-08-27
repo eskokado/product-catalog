@@ -6,6 +6,7 @@ import com.eskcti.algashop.product.catalog.application.product.management.Produc
 import com.eskcti.algashop.product.catalog.application.product.query.ProductDetailOutput;
 import com.eskcti.algashop.product.catalog.application.product.query.ProductDetailOutputTestDataBuilder;
 import com.eskcti.algashop.product.catalog.application.product.query.ProductQueryService;
+import com.eskcti.algashop.product.catalog.application.product.query.ProductSummaryOutput;
 import com.eskcti.algashop.product.catalog.domain.model.category.CategoryNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -78,14 +79,23 @@ class ProductControllerTest {
     void shouldDeleteDisablingProduct() {
         UUID productId = UUID.randomUUID();
 
-        controller.delete(productId);
+        controller.disable(productId);
 
         Mockito.verify(productManagementApplicationService).disable(productId);
     }
 
     @Test
+    void shouldEnableProduct() {
+        UUID productId = UUID.randomUUID();
+
+        controller.enable(productId);
+
+        Mockito.verify(productManagementApplicationService).enable(productId);
+    }
+
+    @Test
     void shouldFilterDelegatingToQueryService() {
-        PageModel<ProductDetailOutput> page = PageModel.<ProductDetailOutput>builder()
+        PageModel<ProductSummaryOutput> page = PageModel.<ProductSummaryOutput>builder()
                 .number(0)
                 .size(10)
                 .totalPages(1)

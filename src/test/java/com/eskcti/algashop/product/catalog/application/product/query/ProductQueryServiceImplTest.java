@@ -1,6 +1,7 @@
 package com.eskcti.algashop.product.catalog.application.product.query;
 
 import com.eskcti.algashop.product.catalog.application.utility.Mapper;
+import com.eskcti.algashop.product.catalog.domain.model.category.Category;
 import com.eskcti.algashop.product.catalog.domain.model.product.Product;
 import com.eskcti.algashop.product.catalog.domain.model.product.ProductNotFoundException;
 import com.eskcti.algashop.product.catalog.domain.model.product.ProductRepository;
@@ -28,12 +29,14 @@ class ProductQueryServiceImplTest {
     @Test
     void shouldFindByIdReturningMappedOutput() {
         UUID productId = UUID.randomUUID();
+        Category category = new Category("Electronics", true);
         Product product = Product.builder()
                 .name("Notebook X11")
                 .brand("Deep Diver")
                 .regularPrice(new java.math.BigDecimal("1500.00"))
                 .salePrice(new java.math.BigDecimal("1000.00"))
                 .enabled(true)
+                .category(category)
                 .build();
         ProductDetailOutput output = ProductDetailOutputTestDataBuilder.aProduct()
                 .id(productId)

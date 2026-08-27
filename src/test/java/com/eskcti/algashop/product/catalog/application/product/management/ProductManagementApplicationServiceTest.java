@@ -70,6 +70,18 @@ class ProductManagementApplicationServiceTest {
     @Test
     void shouldAcceptUpdateWithoutSideEffectsUntilPersistenceIsImplemented() {
         UUID productId = UUID.randomUUID();
+        Category category = new Category("Notebook", true);
+        Product product = Product.builder()
+                .name("Old Product")
+                .brand("Old Brand")
+                .regularPrice(new BigDecimal("1000.00"))
+                .salePrice(new BigDecimal("800.00"))
+                .enabled(true)
+                .category(category)
+                .build();
+        Mockito.when(productRepository.findById(productId)).thenReturn(Optional.of(product));
+        Mockito.when(categoryRepository.findById(Mockito.any(UUID.class))).thenReturn(Optional.of(category));
+
         ProductInput input = ProductInput.builder()
                 .name("Notebook X11")
                 .brand("Deep Diver")
@@ -80,10 +92,83 @@ class ProductManagementApplicationServiceTest {
                 .build();
 
         assertThatCode(() -> service.update(productId, input)).doesNotThrowAnyException();
+        Mockito.verify(productRepository).save(product);
     }
 
     @Test
     void shouldAcceptDisableWithoutSideEffectsUntilPersistenceIsImplemented() {
-        assertThatCode(() -> service.disable(UUID.randomUUID())).doesNotThrowAnyException();
+        UUID productId = UUID.randomUUID();
+        Category category = new Category("Notebook", true);
+        Product product = Product.builder()
+                .name("Notebook X11")
+                .brand("Deep Diver")
+                .regularPrice(new BigDecimal("1500.00"))
+                .salePrice(new BigDecimal("1000.00"))
+                .enabled(true)
+                .category(category)
+                .build();
+        Mockito.when(productRepository.findById(productId)).thenReturn(Optional.of(product));
+
+        assertThatCode(() -> service.disable(productId)).doesNotThrowAnyException();
+        assertThat(product.getEnabled()).isFalse();
+        Mockito.verify(productRepository).save(product);
+    }
+
+    @Test
+    void shouldEnableProduct() {
+        UUID productId = UUID.randomUUID();
+        Category category = new Category("Notebook", true);
+        Product product = Product.builder()
+                .name("Notebook X11")
+                .brand("Deep Diver")
+                .regularPrice(new BigDecimal("1500.00"))
+                .salePrice(new BigDecimal("1000.00"))
+                .enabled(false)
+                .category(category)
+                .build();
+        Mockito.when(productRepository.findById(productId)).thenReturn(Optional.of(product));
+
+        service.enable(productId);
+
+        assertThat(product.getEnabled()).isTrue();
+        Mockito.verify(productRepository).save(product);
+    }
+
+    @Test
+    void shouldThrowWhenEnablingNonExistentProduct() {
+        UUID productId = UUID.randomUUID();
+        Mockito.when(productRepository.findById(productId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.enable(productId))
+                .isInstanceOf(com.eskcti.algashop.product.catalog.domain.model.product.ProductNotFoundException.class);
+        Mockito.verify(productRepository, Mockito.never()).save(Mockito.any());
+    }
+
+    @Test
+    void shouldThrowWhenUpdatingNonExistentProduct() {
+        UUID productId = UUID.randomUUID();
+        Mockito.when(productRepository.findById(productId)).thenReturn(Optional.empty());
+        ProductInput input = ProductInput.builder()
+                .name("Notebook X11")
+                .brand("Deep Diver")
+                .regularPrice(new BigDecimal("1500.00"))
+                .salePrice(new BigDecimal("1000.00"))
+                .enabled(true)
+                .categoryId(UUID.randomUUID())
+                .build();
+
+        assertThatThrownBy(() -> service.update(productId, input))
+                .isInstanceOf(com.eskcti.algashop.product.catalog.domain.model.product.ProductNotFoundException.class);
+        Mockito.verify(productRepository, Mockito.never()).save(Mockito.any());
+    }
+
+    @Test
+    void shouldThrowWhenDisablingNonExistentProduct() {
+        UUID productId = UUID.randomUUID();
+        Mockito.when(productRepository.findById(productId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.disable(productId))
+                .isInstanceOf(com.eskcti.algashop.product.catalog.domain.model.product.ProductNotFoundException.class);
+        Mockito.verify(productRepository, Mockito.never()).save(Mockito.any());
     }
 }

@@ -1,6 +1,7 @@
 package com.eskcti.algashop.product.catalog.domain.model.product;
 
 import com.eskcti.algashop.product.catalog.domain.model.DomainException;
+import com.eskcti.algashop.product.catalog.domain.model.category.Category;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
@@ -15,6 +16,7 @@ class ProductTest {
 
     private final BigDecimal regularPrice = new BigDecimal("1500.00");
     private final BigDecimal salePrice = new BigDecimal("1000.00");
+    private final Category category = new Category("Electronics", true);
 
     @Test
     void shouldCreateProductViaBuilderWithGeneratedId() {
@@ -25,6 +27,7 @@ class ProductTest {
                 .enabled(true)
                 .regularPrice(regularPrice)
                 .salePrice(salePrice)
+                .category(category)
                 .build();
 
         assertThat(product.getId()).isNotNull();
@@ -47,7 +50,14 @@ class ProductTest {
 
     @Test
     void shouldUpdateNameAndBrandWithValidValues() {
-        Product product = Product.builder().name("Notebook X11").brand("Deep Diver").build();
+        Product product = Product.builder()
+                .name("Notebook X11")
+                .brand("Deep Diver")
+                .regularPrice(regularPrice)
+                .salePrice(salePrice)
+                .enabled(true)
+                .category(category)
+                .build();
 
         product.setName("Notebook X12");
         product.setBrand("Deep Diver Pro");
@@ -58,7 +68,14 @@ class ProductTest {
 
     @Test
     void shouldNotAllowBlankName() {
-        Product product = Product.builder().name("Notebook X11").build();
+        Product product = Product.builder()
+                .name("Notebook X11")
+                .brand("Deep Diver")
+                .regularPrice(regularPrice)
+                .salePrice(salePrice)
+                .enabled(true)
+                .category(category)
+                .build();
 
         assertThatThrownBy(() -> product.setName(null))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -69,7 +86,14 @@ class ProductTest {
 
     @Test
     void shouldNotAllowBlankBrand() {
-        Product product = Product.builder().brand("Deep Diver").build();
+        Product product = Product.builder()
+                .name("Notebook X11")
+                .brand("Deep Diver")
+                .regularPrice(regularPrice)
+                .salePrice(salePrice)
+                .enabled(true)
+                .category(category)
+                .build();
 
         assertThatThrownBy(() -> product.setBrand(null))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -223,11 +247,118 @@ class ProductTest {
         assertThat(product.getQuantityInStock()).isEqualTo(10);
     }
 
+    @Test
+    void shouldNotHaveDiscountWhenPricesAreEqual() {
+        Product product = Product.builder()
+                .name("Notebook X11")
+                .brand("Deep Diver")
+                .regularPrice(new BigDecimal("1000.00"))
+                .salePrice(new BigDecimal("1000.00"))
+                .enabled(true)
+                .category(category)
+                .build();
+
+        assertThat(product.getHasDiscount()).isFalse();
+        assertThat(product.getDiscountPercentageRounded()).isZero();
+    }
+
+    @Test
+    void shouldHaveDiscountWhenSalePriceIsLower() {
+        Product product = Product.builder()
+                .name("Notebook X11")
+                .brand("Deep Diver")
+                .regularPrice(new BigDecimal("2000.00"))
+                .salePrice(new BigDecimal("1000.00"))
+                .enabled(true)
+                .category(category)
+                .build();
+
+        assertThat(product.getHasDiscount()).isTrue();
+        assertThat(product.getDiscountPercentageRounded()).isEqualTo(50);
+    }
+
+    @Test
+    void shouldNotHaveDiscountWhenNoPricesSet() {
+        Product product = new Product();
+
+        assertThat(product.getHasDiscount()).isFalse();
+    }
+
+    @Test
+    void shouldSetDiscountPercentageToZeroWhenRegularPriceIsNull() {
+        Product product = new Product();
+
+        product.setSalePrice(new BigDecimal("1000.00"));
+
+        assertThat(product.getDiscountPercentageRounded()).isZero();
+    }
+
+    @Test
+    void shouldSetDiscountPercentageToZeroWhenRegularPriceIsZero() {
+        Product product = new Product();
+
+        product.setRegularPrice(BigDecimal.ZERO);
+
+        assertThat(product.getDiscountPercentageRounded()).isZero();
+    }
+
+    @Test
+    void shouldSetDiscountPercentageToZeroWhenRegularPriceIsZeroAndSalePriceExists() {
+        Product product = new Product();
+        forceSalePrice(product, new BigDecimal("1000.00"));
+        forceRegularPrice(product, BigDecimal.ZERO);
+        invokeMethod(product, "calculateDiscountPercentage");
+
+        assertThat(product.getDiscountPercentageRounded()).isZero();
+    }
+
+    @Test
+    void shouldSetDiscountPercentageToZeroWhenRegularPriceIsNullAndSalePriceExists() {
+        Product product = new Product();
+        forceSalePrice(product, new BigDecimal("1000.00"));
+        forceRegularPrice(product, null);
+        invokeMethod(product, "calculateDiscountPercentage");
+
+        assertThat(product.getDiscountPercentageRounded()).isZero();
+    }
+
     private void forceQuantityInStock(Product product, Integer quantity) {
         try {
             Field field = Product.class.getDeclaredField("quantityInStock");
             field.setAccessible(true);
             field.set(product, quantity);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private void forceRegularPrice(Product product, BigDecimal value) {
+        try {
+            Field field = Product.class.getDeclaredField("regularPrice");
+            field.setAccessible(true);
+            field.set(product, value);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private void forceSalePrice(Product product, BigDecimal value) {
+        try {
+            Field field = Product.class.getDeclaredField("salePrice");
+            field.setAccessible(true);
+            field.set(product, value);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private void invokeMethod(Product product, String methodName) {
+        try {
+            Method method = Product.class.getDeclaredMethod(methodName);
+            method.setAccessible(true);
+            method.invoke(product);
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            throw (RuntimeException) e.getCause();
         } catch (ReflectiveOperationException e) {
             throw new IllegalStateException(e);
         }
