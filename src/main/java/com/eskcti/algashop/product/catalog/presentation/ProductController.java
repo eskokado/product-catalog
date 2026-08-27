@@ -10,6 +10,7 @@ import com.eskcti.algashop.product.catalog.application.PageModel;
 import com.eskcti.algashop.product.catalog.application.product.management.ProductInput;
 import com.eskcti.algashop.product.catalog.application.product.management.ProductManagementApplicationService;
 import com.eskcti.algashop.product.catalog.application.product.query.ProductDetailOutput;
+import com.eskcti.algashop.product.catalog.application.product.query.ProductSummaryOutput;
 import com.eskcti.algashop.product.catalog.application.product.query.ProductQueryService;
 import com.eskcti.algashop.product.catalog.domain.model.category.CategoryNotFoundException;
 
@@ -47,14 +48,20 @@ public class ProductController {
         return productQueryService.findById(productId);
     }
 
-    @DeleteMapping("/{productId}")
+    @DeleteMapping("/{productId}/enable")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable UUID productId) {
+    public void disable(@PathVariable UUID productId) {
         productManagementApplicationService.disable(productId);
     }
 
+    @PutMapping("/{productId}/enable")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void enable(@PathVariable UUID productId) {
+        productManagementApplicationService.enable(productId);
+    }
+
     @GetMapping
-    public PageModel<ProductDetailOutput> filter(
+    public PageModel<ProductSummaryOutput> filter(
             @RequestParam(name = "size", required = false) Integer size,
             @RequestParam(name = "number", required = false) Integer number) {
         return productQueryService.filter(size, number);

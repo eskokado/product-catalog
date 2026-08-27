@@ -7,5 +7,5 @@ import com.eskcti.algashop.product.catalog.application.PageModel;
 public interface ProductQueryService {
     ProductDetailOutput findById(UUID productId);
 
-    PageModel<ProductDetailOutput> filter(Integer size, Integer number);
+    PageModel<ProductSummaryOutput> filter(Integer size, Integer number);
 }
