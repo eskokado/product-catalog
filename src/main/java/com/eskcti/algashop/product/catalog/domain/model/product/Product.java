@@ -2,15 +2,20 @@ package com.eskcti.algashop.product.catalog.domain.model.product;
 
 import com.eskcti.algashop.product.catalog.domain.model.DomainException;
 import com.eskcti.algashop.product.catalog.domain.model.IdGenerator;
+import com.eskcti.algashop.product.catalog.domain.model.category.Category;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.annotation.*;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DocumentReference;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
@@ -54,16 +59,23 @@ public class Product {
     @LastModifiedBy
     private UUID lastModifiedByUserId;
 
+    @DocumentReference
+    @Field(name = "categoryId")
+    private Category category;
+
+    private Integer discountPercentageRounded;
+
     @Builder
     public Product(String name, String brand, String description,
-                   Boolean enabled, BigDecimal regularPrice, BigDecimal salePrice) {
-        this.id = IdGenerator.generateTimeBasedUUID();
-        this.name = name;
-        this.brand = brand;
-        this.description = description;
-        this.enabled = enabled;
-        this.regularPrice = regularPrice;
-        this.salePrice = salePrice;
+                   Boolean enabled, BigDecimal regularPrice, BigDecimal salePrice, Category category) {
+        this.setId(IdGenerator.generateTimeBasedUUID());
+        this.setName(name);
+        this.setBrand(brand);
+        this.setDescription(description);
+        this.setEnabled(enabled);
+        this.setRegularPrice(regularPrice);
+        this.setSalePrice(salePrice);
+        this.setCategory(category);
     }
 
     public void setName(String name) {
@@ -96,6 +108,7 @@ public class Product {
             throw new DomainException("Sale price cannot be greater than regular price");
         }
         this.regularPrice = regularPrice;
+        this.calculateDiscountPercentage();
     }
 
     public void setSalePrice(BigDecimal salePrice) {
@@ -110,11 +123,17 @@ public class Product {
             throw new DomainException("Sale price cannot be greater than regular price");
         }
         this.salePrice = salePrice;
+        this.calculateDiscountPercentage();
     }
 
     public void setEnabled(Boolean enabled) {
         Objects.requireNonNull(enabled);
         this.enabled = enabled;
+    }
+
+    public void setCategory(Category category) {
+        Objects.requireNonNull(category);
+        this.category = category;
     }
 
     public void disable() {
@@ -129,6 +148,10 @@ public class Product {
         return this.getQuantityInStock() != null && this.getQuantityInStock() > 0;
     }
 
+    public boolean getHasDiscount() {
+        return getDiscountPercentageRounded() != null && getDiscountPercentageRounded() > 0;
+    }
+
     private void setId(UUID id) {
         Objects.requireNonNull(id);
         this.id = id;
@@ -140,5 +163,18 @@ public class Product {
             throw new IllegalArgumentException();
         }
         this.quantityInStock =quantityInStock;
+    }
+
+    private void calculateDiscountPercentage() {
+        if (regularPrice == null || salePrice == null || regularPrice.signum() == 0) {
+            discountPercentageRounded = 0;
+            return;
+        }
+
+        discountPercentageRounded = BigDecimal.ONE
+                .subtract(salePrice.divide(regularPrice, 4, RoundingMode.HALF_UP))
+                .multiply(BigDecimal.valueOf(100))
+                .setScale(0, RoundingMode.HALF_UP)
+                .intValue();
     }
 }
