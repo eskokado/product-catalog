@@ -12,6 +12,7 @@ import com.eskcti.algashop.product.catalog.application.product.management.Produc
 import com.eskcti.algashop.product.catalog.application.product.query.ProductDetailOutput;
 import com.eskcti.algashop.product.catalog.application.product.query.ProductSummaryOutput;
 import com.eskcti.algashop.product.catalog.application.product.query.ProductQueryService;
+import com.eskcti.algashop.product.catalog.application.product.query.ProductFilter;
 import com.eskcti.algashop.product.catalog.domain.model.category.CategoryNotFoundException;
 
 import java.util.UUID;
@@ -61,10 +62,8 @@ public class ProductController {
     }
 
     @GetMapping
-    public PageModel<ProductSummaryOutput> filter(
-            @RequestParam(name = "size", required = false) Integer size,
-            @RequestParam(name = "number", required = false) Integer number) {
-        return productQueryService.filter(size, number);
+    public PageModel<ProductSummaryOutput> filter(ProductFilter productFilter) {
+        return productQueryService.filter(productFilter);
     }
 
 }
