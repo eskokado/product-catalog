@@ -5,12 +5,14 @@ import com.eskcti.algashop.product.catalog.application.product.management.Produc
 import com.eskcti.algashop.product.catalog.application.product.management.ProductManagementApplicationService;
 import com.eskcti.algashop.product.catalog.application.product.query.ProductDetailOutput;
 import com.eskcti.algashop.product.catalog.application.product.query.ProductDetailOutputTestDataBuilder;
+import com.eskcti.algashop.product.catalog.application.product.query.ProductFilter;
 import com.eskcti.algashop.product.catalog.application.product.query.ProductQueryService;
 import com.eskcti.algashop.product.catalog.application.product.query.ProductSummaryOutput;
 import com.eskcti.algashop.product.catalog.domain.model.category.CategoryNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -95,14 +97,19 @@ class ProductControllerTest {
 
     @Test
     void shouldFilterDelegatingToQueryService() {
+        ProductFilter productFilter = new ProductFilter();
+        productFilter.setSize(10);
+        productFilter.setPage(0);
+
         PageModel<ProductSummaryOutput> page = PageModel.<ProductSummaryOutput>builder()
                 .number(0)
                 .size(10)
                 .totalPages(1)
                 .totalElements(1)
+                .content(List.of(ProductSummaryOutput.builder().name("Notebook").build()))
                 .build();
-        Mockito.when(productQueryService.filter(10, 0)).thenReturn(page);
+        Mockito.when(productQueryService.filter(productFilter)).thenReturn(page);
 
-        assertThat(controller.filter(10, 0)).isSameAs(page);
+        assertThat(controller.filter(productFilter)).isSameAs(page);
     }
 }

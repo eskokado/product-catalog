@@ -322,6 +322,16 @@ class ProductTest {
         assertThat(product.getDiscountPercentageRounded()).isZero();
     }
 
+    @Test
+    void shouldSetDiscountPercentageToZeroWhenSalePriceIsNullAndRegularPriceExists() {
+        Product product = new Product();
+        forceRegularPrice(product, new BigDecimal("1000.00"));
+        forceSalePrice(product, null);
+        invokeMethod(product, "calculateDiscountPercentage");
+
+        assertThat(product.getDiscountPercentageRounded()).isZero();
+    }
+
     private void forceQuantityInStock(Product product, Integer quantity) {
         try {
             Field field = Product.class.getDeclaredField("quantityInStock");

@@ -8,6 +8,7 @@ import com.eskcti.algashop.product.catalog.application.product.query.CategoryMin
 import com.eskcti.algashop.product.catalog.application.product.query.ProductDetailOutput;
 import com.eskcti.algashop.product.catalog.application.product.query.ProductDetailOutputTestDataBuilder;
 import com.eskcti.algashop.product.catalog.application.product.query.ProductQueryService;
+import com.eskcti.algashop.product.catalog.application.product.query.ProductFilter;
 import com.eskcti.algashop.product.catalog.presentation.ProductController;
 import org.springframework.restdocs.RestDocumentationContextProvider;
 import org.springframework.restdocs.RestDocumentationExtension;
@@ -94,13 +95,13 @@ public class ProductBase {
 
   private void mockFilterProducts() {
     Mockito.when(productQueryService.filter(
-        Mockito.anyInt(), Mockito.anyInt()))
+        Mockito.any(ProductFilter.class)))
         .then((answer) -> {
-          Integer size = answer.getArgument(0);
+          ProductFilter filter = answer.getArgument(0);
 
           return PageModel.<ProductDetailOutput>builder()
-              .number(0)
-              .size(size)
+              .number(filter.getPage())
+              .size(filter.getSize())
               .totalPages(1)
               .totalElements(2)
               .content(

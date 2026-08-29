@@ -8,23 +8,32 @@ import com.eskcti.algashop.product.catalog.domain.model.product.ProductRepositor
 import com.eskcti.algashop.product.catalog.infrastructure.persistence.product.ProductQueryServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 
 class ProductQueryServiceImplTest {
 
     private final ProductRepository productRepository = Mockito.mock(ProductRepository.class);
     private final Mapper mapper = Mockito.mock(Mapper.class);
-    private final ProductQueryServiceImpl service = new ProductQueryServiceImpl(productRepository, mapper);
-
-    @Test
-    void shouldFilterReturningNullUntilPersistenceIsImplemented() {
-        assertThat(service.filter(10, 0)).isNull();
-    }
+    private final MongoOperations mongoOperations = Mockito.mock(MongoOperations.class);
+    private final ProductQueryServiceImpl service = new ProductQueryServiceImpl(productRepository, mapper, mongoOperations);
 
     @Test
     void shouldFindByIdReturningMappedOutput() {
@@ -42,8 +51,8 @@ class ProductQueryServiceImplTest {
                 .id(productId)
                 .build();
 
-        Mockito.when(productRepository.findById(productId)).thenReturn(Optional.of(product));
-        Mockito.when(mapper.convert(product, ProductDetailOutput.class)).thenReturn(output);
+        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
+        when(mapper.convert(product, ProductDetailOutput.class)).thenReturn(output);
 
         assertThat(service.findById(productId)).isEqualTo(output);
     }
@@ -51,9 +60,353 @@ class ProductQueryServiceImplTest {
     @Test
     void shouldThrowWhenProductDoesNotExist() {
         UUID productId = UUID.randomUUID();
-        Mockito.when(productRepository.findById(productId)).thenReturn(Optional.empty());
+        when(productRepository.findById(productId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.findById(productId))
                 .isInstanceOf(ProductNotFoundException.class);
+    }
+
+    @Test
+    void shouldFilterReturningEmptyWhenNoProductsFound() {
+        ProductFilter filter = new ProductFilter();
+        filter.setPage(0);
+        filter.setSize(10);
+
+        when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(0L);
+
+        var result = service.filter(filter);
+
+        assertThat(result.getContent()).isEmpty();
+        assertThat(result.getNumber()).isEqualTo(0);
+        assertThat(result.getSize()).isEqualTo(10);
+        assertThat(result.getTotalElements()).isEqualTo(0);
+        assertThat(result.getTotalPages()).isEqualTo(0);
+    }
+
+    @Test
+    void shouldFilterReturningProductsWhenFound() {
+        ProductFilter filter = new ProductFilter();
+        filter.setPage(0);
+        filter.setSize(10);
+
+        Category category = new Category("Electronics", true);
+        Product product = Product.builder()
+                .name("Notebook X11")
+                .brand("Deep Diver")
+                .regularPrice(new BigDecimal("1500.00"))
+                .salePrice(new BigDecimal("1000.00"))
+                .enabled(true)
+                .category(category)
+                .build();
+
+        ProductSummaryOutput summaryOutput = ProductSummaryOutput.builder()
+                .name("Notebook X11")
+                .brand("Deep Diver")
+                .build();
+
+        when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(1L);
+        when(mongoOperations.find(any(Query.class), eq(Product.class))).thenReturn(List.of(product));
+        when(mapper.convert(product, ProductSummaryOutput.class)).thenReturn(summaryOutput);
+
+        var result = service.filter(filter);
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getNumber()).isEqualTo(0);
+        assertThat(result.getSize()).isEqualTo(10);
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getTotalPages()).isEqualTo(1);
+    }
+
+    @Test
+    void shouldFilterWithEnabledTrue() {
+        ProductFilter filter = new ProductFilter();
+        filter.setPage(0);
+        filter.setSize(10);
+        filter.setEnabled(true);
+
+        when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(0L);
+
+        var result = service.filter(filter);
+
+        assertThat(result.getContent()).isEmpty();
+    }
+
+    @Test
+    void shouldFilterWithEnabledFalse() {
+        ProductFilter filter = new ProductFilter();
+        filter.setPage(0);
+        filter.setSize(10);
+        filter.setEnabled(false);
+
+        when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(0L);
+
+        var result = service.filter(filter);
+
+        assertThat(result.getContent()).isEmpty();
+    }
+
+    @Test
+    void shouldFilterWithAddedAtFromAndTo() {
+        ProductFilter filter = new ProductFilter();
+        filter.setPage(0);
+        filter.setSize(10);
+        filter.setAddedAtFrom(OffsetDateTime.now().minusDays(10));
+        filter.setAddedAtTo(OffsetDateTime.now());
+
+        when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(0L);
+
+        var result = service.filter(filter);
+
+        assertThat(result.getContent()).isEmpty();
+    }
+
+    @Test
+    void shouldFilterWithAddedAtFromOnly() {
+        ProductFilter filter = new ProductFilter();
+        filter.setPage(0);
+        filter.setSize(10);
+        filter.setAddedAtFrom(OffsetDateTime.now().minusDays(10));
+
+        when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(0L);
+
+        var result = service.filter(filter);
+
+        assertThat(result.getContent()).isEmpty();
+    }
+
+    @Test
+    void shouldFilterWithAddedAtToOnly() {
+        ProductFilter filter = new ProductFilter();
+        filter.setPage(0);
+        filter.setSize(10);
+        filter.setAddedAtTo(OffsetDateTime.now());
+
+        when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(0L);
+
+        var result = service.filter(filter);
+
+        assertThat(result.getContent()).isEmpty();
+    }
+
+    @Test
+    void shouldFilterWithPriceFromAndTo() {
+        ProductFilter filter = new ProductFilter();
+        filter.setPage(0);
+        filter.setSize(10);
+        filter.setPriceFrom(new BigDecimal("100"));
+        filter.setPriceTo(new BigDecimal("500"));
+
+        when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(0L);
+
+        var result = service.filter(filter);
+
+        assertThat(result.getContent()).isEmpty();
+    }
+
+    @Test
+    void shouldFilterWithPriceFromOnly() {
+        ProductFilter filter = new ProductFilter();
+        filter.setPage(0);
+        filter.setSize(10);
+        filter.setPriceFrom(new BigDecimal("100"));
+
+        when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(0L);
+
+        var result = service.filter(filter);
+
+        assertThat(result.getContent()).isEmpty();
+    }
+
+    @Test
+    void shouldFilterWithPriceToOnly() {
+        ProductFilter filter = new ProductFilter();
+        filter.setPage(0);
+        filter.setSize(10);
+        filter.setPriceTo(new BigDecimal("500"));
+
+        when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(0L);
+
+        var result = service.filter(filter);
+
+        assertThat(result.getContent()).isEmpty();
+    }
+
+    @Test
+    void shouldFilterWithHasDiscountTrue() {
+        ProductFilter filter = new ProductFilter();
+        filter.setPage(0);
+        filter.setSize(10);
+        filter.setHasDiscount(true);
+
+        when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(0L);
+
+        var result = service.filter(filter);
+
+        assertThat(result.getContent()).isEmpty();
+    }
+
+    @Test
+    void shouldFilterWithHasDiscountFalse() {
+        ProductFilter filter = new ProductFilter();
+        filter.setPage(0);
+        filter.setSize(10);
+        filter.setHasDiscount(false);
+
+        when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(0L);
+
+        var result = service.filter(filter);
+
+        assertThat(result.getContent()).isEmpty();
+    }
+
+    @Test
+    void shouldFilterWithInStockTrue() {
+        ProductFilter filter = new ProductFilter();
+        filter.setPage(0);
+        filter.setSize(10);
+        filter.setInStock(true);
+
+        when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(0L);
+
+        var result = service.filter(filter);
+
+        assertThat(result.getContent()).isEmpty();
+    }
+
+    @Test
+    void shouldFilterWithInStockFalse() {
+        ProductFilter filter = new ProductFilter();
+        filter.setPage(0);
+        filter.setSize(10);
+        filter.setInStock(false);
+
+        when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(0L);
+
+        var result = service.filter(filter);
+
+        assertThat(result.getContent()).isEmpty();
+    }
+
+    @Test
+    void shouldFilterWithCategoriesId() {
+        ProductFilter filter = new ProductFilter();
+        filter.setPage(0);
+        filter.setSize(10);
+        filter.setCategoriesId(new UUID[]{UUID.randomUUID(), UUID.randomUUID()});
+
+        when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(0L);
+
+        var result = service.filter(filter);
+
+        assertThat(result.getContent()).isEmpty();
+    }
+
+    @Test
+    void shouldFilterWithTerm() {
+        ProductFilter filter = new ProductFilter();
+        filter.setPage(0);
+        filter.setSize(10);
+        filter.setTerm("notebook");
+
+        when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(0L);
+
+        var result = service.filter(filter);
+
+        assertThat(result.getContent()).isEmpty();
+    }
+
+    @Test
+    void shouldFilterWithAllCriteria() {
+        ProductFilter filter = new ProductFilter();
+        filter.setPage(0);
+        filter.setSize(10);
+        filter.setEnabled(true);
+        filter.setAddedAtFrom(OffsetDateTime.now().minusDays(10));
+        filter.setAddedAtTo(OffsetDateTime.now());
+        filter.setPriceFrom(new BigDecimal("100"));
+        filter.setPriceTo(new BigDecimal("500"));
+        filter.setHasDiscount(true);
+        filter.setInStock(true);
+        filter.setCategoriesId(new UUID[]{UUID.randomUUID()});
+        filter.setTerm("notebook");
+
+        when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(0L);
+
+        var result = service.filter(filter);
+
+        assertThat(result.getContent()).isEmpty();
+    }
+
+    @Test
+    void shouldFilterWithEmptyCategoriesId() {
+        ProductFilter filter = new ProductFilter();
+        filter.setPage(0);
+        filter.setSize(10);
+        filter.setCategoriesId(new UUID[]{});
+
+        when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(0L);
+
+        var result = service.filter(filter);
+
+        assertThat(result.getContent()).isEmpty();
+    }
+
+    @Test
+    void shouldFilterWithNullTerm() {
+        ProductFilter filter = new ProductFilter();
+        filter.setPage(0);
+        filter.setSize(10);
+        filter.setTerm("");
+
+        when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(0L);
+
+        var result = service.filter(filter);
+
+        assertThat(result.getContent()).isEmpty();
+    }
+
+    @Test
+    void shouldFilterWithSalePriceSortType() {
+        ProductFilter filter = new ProductFilter();
+        filter.setPage(0);
+        filter.setSize(10);
+        filter.setSortByProperty(ProductFilter.SortType.SALE_PRICE);
+        filter.setSortDirection(Sort.Direction.DESC);
+
+        when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(0L);
+
+        var result = service.filter(filter);
+
+        assertThat(result.getContent()).isEmpty();
+    }
+
+    @Test
+    void shouldFilterWithDefaultSortType() {
+        ProductFilter filter = new ProductFilter();
+        filter.setPage(0);
+        filter.setSize(10);
+
+        when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(0L);
+
+        var result = service.filter(filter);
+
+        assertThat(result.getContent()).isEmpty();
+    }
+
+    @Test
+    void shouldCalculateMultiplePages() {
+        ProductFilter filter = new ProductFilter();
+        filter.setPage(0);
+        filter.setSize(10);
+
+        when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(25L);
+        when(mongoOperations.find(any(Query.class), eq(Product.class))).thenReturn(Collections.emptyList());
+        when(mapper.convert(any(), eq(ProductSummaryOutput.class)))
+                .thenReturn(ProductSummaryOutput.builder().build());
+
+        var result = service.filter(filter);
+
+        assertThat(result.getTotalPages()).isEqualTo(3);
+        assertThat(result.getTotalElements()).isEqualTo(25);
     }
 }
