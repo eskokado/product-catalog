@@ -25,7 +25,7 @@ class DataLoadPropertiesTest {
     void shouldHaveValidProperties() {
         DataLoadProperties properties = new DataLoadProperties();
         properties.setEnabled(true);
-        properties.setAutoDrop(false);
+        properties.setAutoDelete(false);
 
         DataLoadProperties.DataLoadSource source = new DataLoadProperties.DataLoadSource();
         source.setLocation("db/testdata/categories.json");
@@ -41,7 +41,7 @@ class DataLoadPropertiesTest {
     void shouldRejectNullEnabled() {
         DataLoadProperties properties = new DataLoadProperties();
         properties.setEnabled(null);
-        properties.setAutoDrop(false);
+        properties.setAutoDelete(false);
 
         Set<ConstraintViolation<DataLoadProperties>> violations = validator.validate(properties);
 
@@ -53,19 +53,19 @@ class DataLoadPropertiesTest {
     void shouldRejectNullAutoDrop() {
         DataLoadProperties properties = new DataLoadProperties();
         properties.setEnabled(true);
-        properties.setAutoDrop(null);
+        properties.setAutoDelete(null);
 
         Set<ConstraintViolation<DataLoadProperties>> violations = validator.validate(properties);
 
         assertThat(violations).isNotEmpty();
-        assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("autoDrop"));
+        assertThat(violations).anyMatch(v -> v.getPropertyPath().toString().equals("autoDelete"));
     }
 
     @Test
     void shouldAllowNullSources() {
         DataLoadProperties properties = new DataLoadProperties();
         properties.setEnabled(true);
-        properties.setAutoDrop(false);
+        properties.setAutoDelete(false);
         properties.setSources(null);
 
         Set<ConstraintViolation<DataLoadProperties>> violations = validator.validate(properties);
@@ -77,7 +77,7 @@ class DataLoadPropertiesTest {
     void shouldRejectSourceWithBlankLocation() {
         DataLoadProperties properties = new DataLoadProperties();
         properties.setEnabled(true);
-        properties.setAutoDrop(false);
+        properties.setAutoDelete(false);
 
         DataLoadProperties.DataLoadSource source = new DataLoadProperties.DataLoadSource();
         source.setLocation("");
@@ -94,7 +94,7 @@ class DataLoadPropertiesTest {
     void shouldRejectSourceWithBlankCollection() {
         DataLoadProperties properties = new DataLoadProperties();
         properties.setEnabled(true);
-        properties.setAutoDrop(false);
+        properties.setAutoDelete(false);
 
         DataLoadProperties.DataLoadSource source = new DataLoadProperties.DataLoadSource();
         source.setLocation("db/testdata/categories.json");
@@ -115,10 +115,10 @@ class DataLoadPropertiesTest {
     }
 
     @Test
-    void shouldSetAndGetAutoDrop() {
+    void shouldSetAndgetAutoDelete() {
         DataLoadProperties properties = new DataLoadProperties();
-        properties.setAutoDrop(true);
-        assertThat(properties.getAutoDrop()).isTrue();
+        properties.setAutoDelete(true);
+        assertThat(properties.getAutoDelete()).isTrue();
     }
 
     @Test

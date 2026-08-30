@@ -9,6 +9,7 @@ import org.bson.Document;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.bson.BsonDocument;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -66,8 +67,8 @@ public class DataLoader implements ApplicationRunner {
         }
 
         try {
-            if (Boolean.TRUE.equals(properties.getAutoDrop())) {
-                mongoOperations.getCollection(collectionName).drop();
+            if (Boolean.TRUE.equals(properties.getAutoDelete())) {
+                mongoOperations.getCollection(collectionName).deleteMany(new BsonDocument());
             }
             return mongoOperations.insert(mongoDocs, collectionName).size();
         } catch (Exception e) {

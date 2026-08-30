@@ -1,6 +1,7 @@
 package com.eskcti.algashop.product.catalog.infrastructure.persistence.dataload;
 
 import com.eskcti.algashop.product.catalog.infrastructure.utility.AlgaShopResourceUtils;
+import org.bson.BsonDocument;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -37,7 +38,7 @@ class DataLoaderTest {
     @Test
     void shouldNotLoadDataWhenSourcesIsNull() throws Exception {
         properties.setEnabled(true);
-        properties.setAutoDrop(false);
+        properties.setAutoDelete(false);
         properties.setSources(null);
         DataLoader loader = new DataLoader(mongoOperations, properties);
 
@@ -49,7 +50,7 @@ class DataLoaderTest {
     @Test
     void shouldNotLoadDataWhenSourcesIsEmpty() throws Exception {
         properties.setEnabled(true);
-        properties.setAutoDrop(false);
+        properties.setAutoDelete(false);
         properties.setSources(Collections.emptyList());
         DataLoader loader = new DataLoader(mongoOperations, properties);
 
@@ -61,7 +62,7 @@ class DataLoaderTest {
     @Test
     void shouldImportValidJsonFile() throws Exception {
         properties.setEnabled(true);
-        properties.setAutoDrop(false);
+        properties.setAutoDelete(false);
         DataLoadProperties.DataLoadSource source = new DataLoadProperties.DataLoadSource();
         source.setLocation("db/testdata/categories.json");
         source.setCollection("categories");
@@ -80,7 +81,7 @@ class DataLoaderTest {
     @Test
     void shouldSkipBlankResource() throws Exception {
         properties.setEnabled(true);
-        properties.setAutoDrop(false);
+        properties.setAutoDelete(false);
         DataLoadProperties.DataLoadSource source = new DataLoadProperties.DataLoadSource();
         source.setLocation("empty.json");
         source.setCollection("test");
@@ -99,7 +100,7 @@ class DataLoaderTest {
     @Test
     void shouldHandleParseErrorGracefully() throws Exception {
         properties.setEnabled(true);
-        properties.setAutoDrop(false);
+        properties.setAutoDelete(false);
         DataLoadProperties.DataLoadSource source = new DataLoadProperties.DataLoadSource();
         source.setLocation("invalid.json");
         source.setCollection("test");
@@ -118,7 +119,7 @@ class DataLoaderTest {
     @Test
     void shouldHandleInsertErrorGracefully() throws Exception {
         properties.setEnabled(true);
-        properties.setAutoDrop(false);
+        properties.setAutoDelete(false);
         DataLoadProperties.DataLoadSource source = new DataLoadProperties.DataLoadSource();
         source.setLocation("db/testdata/categories.json");
         source.setCollection("categories");
@@ -137,28 +138,27 @@ class DataLoaderTest {
     @Test
     void shouldDropCollectionWhenAutoDropEnabled() throws Exception {
         properties.setEnabled(true);
-        properties.setAutoDrop(true);
+        properties.setAutoDelete(true);
         DataLoadProperties.DataLoadSource source = new DataLoadProperties.DataLoadSource();
         source.setLocation("db/testdata/categories.json");
         source.setCollection("categories");
         properties.setSources(List.of(source));
 
         MongoCollection<Document> mongoCollection = Mockito.mock(MongoCollection.class);
-        MongoTemplate mongoTemplate = Mockito.mock(MongoTemplate.class);
         when(mongoOperations.getCollection("categories")).thenReturn(mongoCollection);
         doReturn(List.of()).when(mongoOperations).insert(anyList(), eq("categories"));
 
         DataLoader loader = new DataLoader(mongoOperations, properties);
         loader.run(null);
 
-        verify(mongoCollection).drop();
+        verify(mongoCollection).deleteMany(org.mockito.ArgumentMatchers.any(BsonDocument.class));
         verify(mongoOperations).insert(anyList(), eq("categories"));
     }
 
     @Test
     void shouldImportMultipleSources() throws Exception {
         properties.setEnabled(true);
-        properties.setAutoDrop(false);
+        properties.setAutoDelete(false);
 
         DataLoadProperties.DataLoadSource source1 = new DataLoadProperties.DataLoadSource();
         source1.setLocation("db/testdata/categories.json");
@@ -184,7 +184,7 @@ class DataLoaderTest {
     @Test
     void shouldReturnZeroWhenDocumentsListIsNull() throws Exception {
         properties.setEnabled(true);
-        properties.setAutoDrop(false);
+        properties.setAutoDelete(false);
         DataLoader loader = new DataLoader(mongoOperations, properties);
 
         Method insertIntoMethod = DataLoader.class.getDeclaredMethod("insertInto", List.class, String.class);
