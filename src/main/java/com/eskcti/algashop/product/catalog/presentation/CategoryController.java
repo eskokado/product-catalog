@@ -5,6 +5,7 @@ import com.eskcti.algashop.product.catalog.application.category.management.Categ
 import com.eskcti.algashop.product.catalog.application.category.management.CategoryManagementService;
 import com.eskcti.algashop.product.catalog.application.category.query.CategoryDetailOutput;
 import com.eskcti.algashop.product.catalog.application.category.query.CategoryQueryService;
+import com.eskcti.algashop.product.catalog.application.category.query.CategoryFilter;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,9 +23,8 @@ public class CategoryController {
     private final CategoryManagementService categoryManagementService;
 
     @GetMapping
-    public PageModel<CategoryDetailOutput> filter(@RequestParam(defaultValue = "0") Integer page,
-            @RequestParam(defaultValue = "10") Integer size) {
-        return categoryQueryService.filter(size, page);
+    public PageModel<CategoryDetailOutput> filter(CategoryFilter filter) {
+        return categoryQueryService.filter(filter);
     }
 
     @PostMapping
