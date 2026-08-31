@@ -8,6 +8,9 @@ import java.nio.charset.StandardCharsets;
 
 public class AlgaShopResourceUtils {
 
+	private AlgaShopResourceUtils() {
+	}
+
 	public static String readContent(String resourceName) {
 		try (var inputStream = ResourceUtils.class.getClassLoader().getResourceAsStream(resourceName)) {
 			if (inputStream == null) {
