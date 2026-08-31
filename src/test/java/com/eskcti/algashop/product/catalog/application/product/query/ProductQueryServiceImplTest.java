@@ -6,13 +6,13 @@ import com.eskcti.algashop.product.catalog.domain.model.product.Product;
 import com.eskcti.algashop.product.catalog.domain.model.product.ProductNotFoundException;
 import com.eskcti.algashop.product.catalog.domain.model.product.ProductRepository;
 import com.eskcti.algashop.product.catalog.infrastructure.persistence.product.ProductQueryServiceImpl;
+import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class ProductQueryServiceImplTest {
 
@@ -78,7 +78,7 @@ class ProductQueryServiceImplTest {
 
         assertThat(result.getContent()).isEmpty();
         assertThat(result.getNumber()).isEqualTo(0);
-        assertThat(result.getSize()).isEqualTo(10);
+        assertThat(result.getSize()).isEqualTo(0);
         assertThat(result.getTotalElements()).isEqualTo(0);
         assertThat(result.getTotalPages()).isEqualTo(0);
     }
@@ -89,24 +89,17 @@ class ProductQueryServiceImplTest {
         filter.setPage(0);
         filter.setSize(10);
 
-        Category category = new Category("Electronics", true);
-        Product product = Product.builder()
-                .name("Notebook X11")
-                .brand("Deep Diver")
-                .regularPrice(new BigDecimal("1500.00"))
-                .salePrice(new BigDecimal("1000.00"))
-                .enabled(true)
-                .category(category)
-                .build();
-
         ProductSummaryOutput summaryOutput = ProductSummaryOutput.builder()
                 .name("Notebook X11")
                 .brand("Deep Diver")
                 .build();
 
+        AggregationResults<ProductSummaryOutput> aggregationResults =
+                new AggregationResults<>(List.of(summaryOutput), new Document());
+
         when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(1L);
-        when(mongoOperations.find(any(Query.class), eq(Product.class))).thenReturn(List.of(product));
-        when(mapper.convert(product, ProductSummaryOutput.class)).thenReturn(summaryOutput);
+        when(mongoOperations.aggregate(any(Aggregation.class), eq(Product.class), eq(ProductSummaryOutput.class)))
+                .thenReturn(aggregationResults);
 
         var result = service.filter(filter);
 
@@ -399,14 +392,107 @@ class ProductQueryServiceImplTest {
         filter.setPage(0);
         filter.setSize(10);
 
+        AggregationResults<ProductSummaryOutput> aggregationResults =
+                new AggregationResults<>(Collections.emptyList(), new Document());
+
         when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(25L);
-        when(mongoOperations.find(any(Query.class), eq(Product.class))).thenReturn(Collections.emptyList());
-        when(mapper.convert(any(), eq(ProductSummaryOutput.class)))
-                .thenReturn(ProductSummaryOutput.builder().build());
+        when(mongoOperations.aggregate(any(Aggregation.class), eq(Product.class), eq(ProductSummaryOutput.class)))
+                .thenReturn(aggregationResults);
 
         var result = service.filter(filter);
 
         assertThat(result.getTotalPages()).isEqualTo(3);
         assertThat(result.getTotalElements()).isEqualTo(25);
+    }
+
+    @Test
+    void shouldFilterWithTermAndReturnResults() {
+        ProductFilter filter = new ProductFilter();
+        filter.setPage(0);
+        filter.setSize(10);
+        filter.setTerm("notebook");
+
+        ProductSummaryOutput summaryOutput = ProductSummaryOutput.builder()
+                .name("Notebook X11")
+                .brand("Deep Diver")
+                .score(1.5f)
+                .build();
+
+        AggregationResults<ProductSummaryOutput> aggregationResults =
+                new AggregationResults<>(List.of(summaryOutput), new Document());
+
+        when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(1L);
+        when(mongoOperations.aggregate(any(Aggregation.class), eq(Product.class), eq(ProductSummaryOutput.class)))
+                .thenReturn(aggregationResults);
+
+        var result = service.filter(filter);
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getTotalPages()).isEqualTo(1);
+    }
+
+    @Test
+    void shouldCreateTextScoreDocument() {
+        Document doc = ProductQueryServiceImpl.textScoreDocument();
+
+        assertThat(doc).isNotNull();
+        assertThat(doc.containsKey("$addFields")).isTrue();
+    }
+
+    @Test
+    void shouldFilterWithTermAndCriteriaAndReturnResults() {
+        ProductFilter filter = new ProductFilter();
+        filter.setPage(0);
+        filter.setSize(10);
+        filter.setTerm("notebook");
+        filter.setEnabled(true);
+        filter.setHasDiscount(true);
+        filter.setInStock(true);
+
+        ProductSummaryOutput summaryOutput = ProductSummaryOutput.builder()
+                .name("Notebook X11")
+                .brand("Deep Diver")
+                .score(1.5f)
+                .build();
+
+        AggregationResults<ProductSummaryOutput> aggregationResults =
+                new AggregationResults<>(List.of(summaryOutput), new Document());
+
+        when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(1L);
+        when(mongoOperations.aggregate(any(Aggregation.class), eq(Product.class), eq(ProductSummaryOutput.class)))
+                .thenReturn(aggregationResults);
+
+        var result = service.filter(filter);
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getTotalElements()).isEqualTo(1);
+    }
+
+    @Test
+    void shouldFilterWithCriteriaAndReturnResults() {
+        ProductFilter filter = new ProductFilter();
+        filter.setPage(0);
+        filter.setSize(10);
+        filter.setEnabled(true);
+        filter.setHasDiscount(true);
+        filter.setInStock(true);
+
+        ProductSummaryOutput summaryOutput = ProductSummaryOutput.builder()
+                .name("Notebook X11")
+                .brand("Deep Diver")
+                .build();
+
+        AggregationResults<ProductSummaryOutput> aggregationResults =
+                new AggregationResults<>(List.of(summaryOutput), new Document());
+
+        when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(1L);
+        when(mongoOperations.aggregate(any(Aggregation.class), eq(Product.class), eq(ProductSummaryOutput.class)))
+                .thenReturn(aggregationResults);
+
+        var result = service.filter(filter);
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getTotalElements()).isEqualTo(1);
     }
 }
