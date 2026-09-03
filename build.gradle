@@ -126,7 +126,8 @@ tasks.register('integrationTest', Test) {
 }
 
 def jacocoCoverageExcludes = [
-	'**/ProductCatalogApplication.class'
+	'**/ProductCatalogApplication.class',
+	'**/ResourceNotFoundException.class'
 ]
 
 jacocoTestReport {
