@@ -104,19 +104,26 @@ class ProductTest {
 
     @Test
     void shouldSetRegularPriceWhenSalePriceIsNull() {
-        Product product = new Product();
+        Product product = Product.builder()
+                .name("Notebook")
+                .brand("Deep Diver")
+                .regularPrice(regularPrice)
+                .salePrice(salePrice)
+                .enabled(true)
+                .category(category)
+                .build();
 
-        product.setRegularPrice(regularPrice);
+        product.changePrice(new BigDecimal("1600.00"), new BigDecimal("1100.00"));
 
-        assertThat(product.getRegularPrice()).isEqualByComparingTo(regularPrice);
-        assertThat(product.getSalePrice()).isEqualByComparingTo(regularPrice);
+        assertThat(product.getRegularPrice()).isEqualByComparingTo(new BigDecimal("1600.00"));
+        assertThat(product.getSalePrice()).isEqualByComparingTo(new BigDecimal("1100.00"));
     }
 
     @Test
     void shouldNotAllowNullRegularPrice() {
         Product product = new Product();
 
-        assertThatThrownBy(() -> product.setRegularPrice(null))
+        assertThatThrownBy(() -> invokeSetter(product, "setRegularPrice", new Class[]{BigDecimal.class}, (Object) null))
                 .isInstanceOf(NullPointerException.class);
     }
 
@@ -124,46 +131,63 @@ class ProductTest {
     void shouldNotAllowNegativeRegularPrice() {
         Product product = new Product();
 
-        assertThatThrownBy(() -> product.setRegularPrice(new BigDecimal("-1.00")))
+        assertThatThrownBy(() -> invokeSetter(product, "setRegularPrice", new Class[]{BigDecimal.class}, new BigDecimal("-1.00")))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void shouldAllowRegularPriceAtOrAboveExistingSalePrice() {
-        Product product = new Product();
-        product.setRegularPrice(regularPrice);
-        product.setSalePrice(salePrice);
+        Product product = Product.builder()
+                .name("Notebook")
+                .brand("Deep Diver")
+                .regularPrice(regularPrice)
+                .salePrice(salePrice)
+                .enabled(true)
+                .category(category)
+                .build();
 
-        product.setRegularPrice(new BigDecimal("1600.00"));
+        product.changePrice(new BigDecimal("1600.00"), new BigDecimal("1100.00"));
 
         assertThat(product.getRegularPrice()).isEqualByComparingTo(new BigDecimal("1600.00"));
     }
 
     @Test
     void shouldNotAllowRegularPriceBelowSalePrice() {
-        Product product = new Product();
-        product.setRegularPrice(regularPrice);
-        product.setSalePrice(salePrice);
+        Product product = Product.builder()
+                .name("Notebook")
+                .brand("Deep Diver")
+                .regularPrice(regularPrice)
+                .salePrice(salePrice)
+                .enabled(true)
+                .category(category)
+                .build();
 
-        assertThatThrownBy(() -> product.setRegularPrice(new BigDecimal("500.00")))
+        assertThatThrownBy(() -> product.changePrice(new BigDecimal("500.00"), new BigDecimal("1000.00")))
                 .isInstanceOf(DomainException.class);
     }
 
     @Test
     void shouldSetSalePriceWhenRegularPriceIsNull() {
-        Product product = new Product();
+        Product product = Product.builder()
+                .name("Notebook")
+                .brand("Deep Diver")
+                .regularPrice(regularPrice)
+                .salePrice(salePrice)
+                .enabled(true)
+                .category(category)
+                .build();
 
-        product.setSalePrice(salePrice);
+        product.changePrice(new BigDecimal("1500.00"), new BigDecimal("900.00"));
 
-        assertThat(product.getSalePrice()).isEqualByComparingTo(salePrice);
-        assertThat(product.getRegularPrice()).isEqualByComparingTo(salePrice);
+        assertThat(product.getSalePrice()).isEqualByComparingTo(new BigDecimal("900.00"));
+        assertThat(product.getRegularPrice()).isEqualByComparingTo(new BigDecimal("1500.00"));
     }
 
     @Test
     void shouldNotAllowNullSalePrice() {
         Product product = new Product();
 
-        assertThatThrownBy(() -> product.setSalePrice(null))
+        assertThatThrownBy(() -> invokeSetter(product, "setSalePrice", new Class[]{BigDecimal.class}, (Object) null))
                 .isInstanceOf(NullPointerException.class);
     }
 
@@ -171,16 +195,22 @@ class ProductTest {
     void shouldNotAllowNegativeSalePrice() {
         Product product = new Product();
 
-        assertThatThrownBy(() -> product.setSalePrice(new BigDecimal("-1.00")))
+        assertThatThrownBy(() -> invokeSetter(product, "setSalePrice", new Class[]{BigDecimal.class}, new BigDecimal("-1.00")))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void shouldNotAllowSalePriceAboveRegularPrice() {
-        Product product = new Product();
-        product.setSalePrice(salePrice);
+        Product product = Product.builder()
+                .name("Notebook")
+                .brand("Deep Diver")
+                .regularPrice(regularPrice)
+                .salePrice(salePrice)
+                .enabled(true)
+                .category(category)
+                .build();
 
-        assertThatThrownBy(() -> product.setSalePrice(new BigDecimal("2000.00")))
+        assertThatThrownBy(() -> product.changePrice(new BigDecimal("1500.00"), new BigDecimal("2000.00")))
                 .isInstanceOf(DomainException.class);
     }
 
@@ -288,7 +318,7 @@ class ProductTest {
     void shouldSetDiscountPercentageToZeroWhenRegularPriceIsNull() {
         Product product = new Product();
 
-        product.setSalePrice(new BigDecimal("1000.00"));
+        invokeSetter(product, "setSalePrice", new Class[]{BigDecimal.class}, new BigDecimal("1000.00"));
 
         assertThat(product.getDiscountPercentageRounded()).isZero();
     }
@@ -297,7 +327,7 @@ class ProductTest {
     void shouldSetDiscountPercentageToZeroWhenRegularPriceIsZero() {
         Product product = new Product();
 
-        product.setRegularPrice(BigDecimal.ZERO);
+        invokeSetter(product, "setRegularPrice", new Class[]{BigDecimal.class}, BigDecimal.ZERO);
 
         assertThat(product.getDiscountPercentageRounded()).isZero();
     }
@@ -384,5 +414,134 @@ class ProductTest {
         } catch (ReflectiveOperationException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    @Test
+    void shouldSetEnabledWhenWasEnabledIsNull() {
+        Product product = new Product();
+        product.setName("Notebook");
+        product.setBrand("Deep Diver");
+        product.setCategory(category);
+
+        product.setEnabled(true);
+
+        assertThat(product.getEnabled()).isTrue();
+    }
+
+    @Test
+    void shouldSetEnabledToFalseWhenWasEnabledIsNull() {
+        Product product = new Product();
+        product.setName("Notebook");
+        product.setBrand("Deep Diver");
+        product.setCategory(category);
+
+        product.setEnabled(false);
+
+        assertThat(product.getEnabled()).isFalse();
+    }
+
+    @Test
+    void shouldNotRegisterEventsWhenEnabledWasAlreadyTrue() {
+        Product product = Product.builder()
+                .name("Notebook")
+                .brand("Deep Diver")
+                .regularPrice(regularPrice)
+                .salePrice(salePrice)
+                .enabled(true)
+                .category(category)
+                .build();
+
+        product.setEnabled(true);
+
+        assertThat(product.getEnabled()).isTrue();
+    }
+
+    @Test
+    void shouldNotRegisterEventsWhenEnabledWasAlreadyFalse() {
+        Product product = Product.builder()
+                .name("Notebook")
+                .brand("Deep Diver")
+                .regularPrice(regularPrice)
+                .salePrice(salePrice)
+                .enabled(false)
+                .category(category)
+                .build();
+
+        product.setEnabled(false);
+
+        assertThat(product.getEnabled()).isFalse();
+    }
+
+    @Test
+    void shouldNotRegisterEventsWhenPricesDidNotChange() {
+        Product product = Product.builder()
+                .name("Notebook")
+                .brand("Deep Diver")
+                .regularPrice(new BigDecimal("1500.00"))
+                .salePrice(new BigDecimal("1000.00"))
+                .enabled(true)
+                .category(category)
+                .build();
+
+        product.changePrice(new BigDecimal("1500.00"), new BigDecimal("1000.00"));
+
+        assertThat(product.getRegularPrice()).isEqualByComparingTo(new BigDecimal("1500.00"));
+        assertThat(product.getSalePrice()).isEqualByComparingTo(new BigDecimal("1000.00"));
+    }
+
+    @Test
+    void shouldRegisterPlacedOnSaleEventWhenNewlyOnSale() {
+        Product product = Product.builder()
+                .name("Notebook")
+                .brand("Deep Diver")
+                .regularPrice(new BigDecimal("1500.00"))
+                .salePrice(new BigDecimal("1500.00"))
+                .enabled(true)
+                .category(category)
+                .build();
+
+        assertThat(product.getHasDiscount()).isFalse();
+
+        product.changePrice(new BigDecimal("1500.00"), new BigDecimal("1000.00"));
+
+        assertThat(product.getHasDiscount()).isTrue();
+        assertThat(product.getDiscountPercentageRounded()).isEqualTo(33);
+    }
+
+    @Test
+    void shouldNotRegisterPlacedOnSaleEventWhenAlreadyOnSale() {
+        Product product = Product.builder()
+                .name("Notebook")
+                .brand("Deep Diver")
+                .regularPrice(new BigDecimal("1500.00"))
+                .salePrice(new BigDecimal("1000.00"))
+                .enabled(true)
+                .category(category)
+                .build();
+
+        assertThat(product.getHasDiscount()).isTrue();
+
+        product.changePrice(new BigDecimal("2000.00"), new BigDecimal("1200.00"));
+
+        assertThat(product.getHasDiscount()).isTrue();
+        assertThat(product.getDiscountPercentageRounded()).isEqualTo(40);
+    }
+
+    @Test
+    void shouldNotRegisterPlacedOnSaleEventWhenRemovingDiscount() {
+        Product product = Product.builder()
+                .name("Notebook")
+                .brand("Deep Diver")
+                .regularPrice(new BigDecimal("1500.00"))
+                .salePrice(new BigDecimal("1000.00"))
+                .enabled(true)
+                .category(category)
+                .build();
+
+        assertThat(product.getHasDiscount()).isTrue();
+
+        product.changePrice(new BigDecimal("1500.00"), new BigDecimal("1500.00"));
+
+        assertThat(product.getHasDiscount()).isFalse();
     }
 }
