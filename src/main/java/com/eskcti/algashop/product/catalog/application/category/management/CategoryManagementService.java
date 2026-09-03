@@ -1,5 +1,7 @@
 package com.eskcti.algashop.product.catalog.application.category.management;
 
+import com.eskcti.algashop.product.catalog.application.ApplicationMessagePublisher;
+import com.eskcti.algashop.product.catalog.application.category.event.CategoryUpdatedEvent;
 import com.eskcti.algashop.product.catalog.application.ResourceNotFoundException;
 import com.eskcti.algashop.product.catalog.domain.model.category.Category;
 import com.eskcti.algashop.product.catalog.domain.model.category.CategoryNotFoundException;
@@ -16,6 +18,8 @@ import java.util.UUID;
 public class CategoryManagementService {
 
     private final CategoryRepository categoryRepository;
+    private final ApplicationMessagePublisher applicationMessagePublisher;
+
 
     public UUID create(@Valid CategoryInput input) {
         Category category = new Category(input.getName(), input.getEnabled());
@@ -29,6 +33,12 @@ public class CategoryManagementService {
         category.setName(input.getName());
         category.setEnabled(input.getEnabled());
         categoryRepository.save(category);
+
+        applicationMessagePublisher.send(new CategoryUpdatedEvent(
+                category.getId(),
+                category.getName(),
+                category.getEnabled()
+        ));
     }
 
     public void disable(UUID categoryId) {
@@ -36,5 +46,11 @@ public class CategoryManagementService {
                 .orElseThrow(() -> new CategoryNotFoundException(categoryId));
         category.setEnabled(false);
         categoryRepository.save(category);
+
+        applicationMessagePublisher.send(new CategoryUpdatedEvent(
+                category.getId(),
+                category.getName(),
+                category.getEnabled()
+        ));
     }
 }
