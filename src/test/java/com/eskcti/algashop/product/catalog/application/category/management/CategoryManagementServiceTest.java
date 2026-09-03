@@ -1,7 +1,9 @@
 package com.eskcti.algashop.product.catalog.application.category.management;
 
-import com.eskcti.algashop.product.catalog.domain.model.DomainEntityNotFoundException;
+import com.eskcti.algashop.product.catalog.application.ApplicationMessagePublisher;
+import com.eskcti.algashop.product.catalog.application.category.event.CategoryUpdatedEvent;
 import com.eskcti.algashop.product.catalog.domain.model.category.Category;
+import com.eskcti.algashop.product.catalog.domain.model.category.CategoryNotFoundException;
 import com.eskcti.algashop.product.catalog.domain.model.category.CategoryRepository;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -11,13 +13,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class CategoryManagementServiceTest {
 
     private final CategoryRepository categoryRepository = Mockito.mock(CategoryRepository.class);
-    private final CategoryManagementService service = new CategoryManagementService(categoryRepository);
+    private final ApplicationMessagePublisher applicationMessagePublisher = Mockito.mock(ApplicationMessagePublisher.class);
+    private final CategoryManagementService service = new CategoryManagementService(categoryRepository, applicationMessagePublisher);
 
     @Test
     void shouldCreateCategoryAndReturnGeneratedId() {
@@ -47,6 +49,12 @@ class CategoryManagementServiceTest {
         assertThat(category.getName()).isEqualTo("Notebook Gamer");
         assertThat(category.getEnabled()).isFalse();
         Mockito.verify(categoryRepository).save(category);
+
+        ArgumentCaptor<CategoryUpdatedEvent> eventCaptor = ArgumentCaptor.forClass(CategoryUpdatedEvent.class);
+        Mockito.verify(applicationMessagePublisher).send(eventCaptor.capture());
+        assertThat(eventCaptor.getValue().getCategoryId()).isEqualTo(category.getId());
+        assertThat(eventCaptor.getValue().getName()).isEqualTo("Notebook Gamer");
+        assertThat(eventCaptor.getValue().getEnabled()).isFalse();
     }
 
     @Test
@@ -58,6 +66,12 @@ class CategoryManagementServiceTest {
 
         assertThat(category.getEnabled()).isFalse();
         Mockito.verify(categoryRepository).save(category);
+
+        ArgumentCaptor<CategoryUpdatedEvent> eventCaptor = ArgumentCaptor.forClass(CategoryUpdatedEvent.class);
+        Mockito.verify(applicationMessagePublisher).send(eventCaptor.capture());
+        assertThat(eventCaptor.getValue().getCategoryId()).isEqualTo(category.getId());
+        assertThat(eventCaptor.getValue().getName()).isEqualTo("Notebook");
+        assertThat(eventCaptor.getValue().getEnabled()).isFalse();
     }
 
     @Test
@@ -70,8 +84,9 @@ class CategoryManagementServiceTest {
                 .build();
 
         assertThatThrownBy(() -> service.update(categoryId, input))
-                .isInstanceOf(DomainEntityNotFoundException.class);
+                .isInstanceOf(CategoryNotFoundException.class);
         Mockito.verify(categoryRepository, Mockito.never()).save(Mockito.any());
+        Mockito.verify(applicationMessagePublisher, Mockito.never()).send(Mockito.any());
     }
 
     @Test
@@ -80,7 +95,8 @@ class CategoryManagementServiceTest {
         Mockito.when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.disable(categoryId))
-                .isInstanceOf(DomainEntityNotFoundException.class);
+                .isInstanceOf(CategoryNotFoundException.class);
         Mockito.verify(categoryRepository, Mockito.never()).save(Mockito.any());
+        Mockito.verify(applicationMessagePublisher, Mockito.never()).send(Mockito.any());
     }
 }

@@ -55,4 +55,23 @@ class CategoryTest {
         assertThatThrownBy(() -> category.setEnabled(null))
                 .isInstanceOf(NullPointerException.class);
     }
+
+    @Test
+    void shouldCreateCategoryWithEnabledFalse() {
+        Category category = new Category("Mouse", false);
+
+        assertThat(category.getId()).isNotNull();
+        assertThat(category.getName()).isEqualTo("Mouse");
+        assertThat(category.getEnabled()).isFalse();
+        assertThat(category.getCreatedAt()).isBeforeOrEqualTo(OffsetDateTime.now());
+    }
+
+    @Test
+    void shouldSetEnabledToTrue() {
+        Category category = new Category("Mouse", false);
+
+        category.setEnabled(true);
+
+        assertThat(category.getEnabled()).isTrue();
+    }
 }
