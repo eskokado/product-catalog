@@ -112,4 +112,26 @@ class ProductControllerTest {
 
         assertThat(controller.filter(productFilter)).isSameAs(page);
     }
+
+    @Test
+    void shouldRestockProduct() {
+        UUID productId = UUID.randomUUID();
+        ProductQuantityModel model = new ProductQuantityModel();
+        model.setQuantity(10);
+
+        controller.restock(productId, model);
+
+        Mockito.verify(productManagementApplicationService).restock(productId, 10);
+    }
+
+    @Test
+    void shouldWithdrawProduct() {
+        UUID productId = UUID.randomUUID();
+        ProductQuantityModel model = new ProductQuantityModel();
+        model.setQuantity(5);
+
+        controller.withdraw(productId, model);
+
+        Mockito.verify(productManagementApplicationService).withdraw(productId, 5);
+    }
 }

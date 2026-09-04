@@ -62,4 +62,22 @@ class ProductEventListenerTest {
 
         assertThatCode(() -> listener.handle(event)).doesNotThrowAnyException();
     }
+
+    @Test
+    void shouldHandleProductRestockedEvent() {
+        ProductRestockedEvent event = ProductRestockedEvent.builder()
+                .productId(UUID.randomUUID())
+                .build();
+
+        assertThatCode(() -> listener.handle(event)).doesNotThrowAnyException();
+    }
+
+    @Test
+    void shouldHandleProductSoldOutEvent() {
+        ProductSoldOutEvent event = ProductSoldOutEvent.builder()
+                .productId(UUID.randomUUID())
+                .build();
+
+        assertThatCode(() -> listener.handle(event)).doesNotThrowAnyException();
+    }
 }
