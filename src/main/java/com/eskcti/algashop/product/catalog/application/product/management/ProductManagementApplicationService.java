@@ -4,10 +4,7 @@ import com.eskcti.algashop.product.catalog.application.ResourceNotFoundException
 import com.eskcti.algashop.product.catalog.domain.model.category.Category;
 import com.eskcti.algashop.product.catalog.domain.model.category.CategoryNotFoundException;
 import com.eskcti.algashop.product.catalog.domain.model.category.CategoryRepository;
-import com.eskcti.algashop.product.catalog.domain.model.product.Product;
-import com.eskcti.algashop.product.catalog.domain.model.product.ProductNotFoundException;
-import com.eskcti.algashop.product.catalog.domain.model.product.ProductRepository;
-import com.eskcti.algashop.product.catalog.domain.model.product.StockService;
+import com.eskcti.algashop.product.catalog.domain.model.product.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 
@@ -21,6 +18,7 @@ public class ProductManagementApplicationService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final StockMovementRepository stockMovementRepository;
 
     private final StockService stockService;
 
@@ -84,11 +82,13 @@ public class ProductManagementApplicationService {
 
     public void restock(UUID productId, int quantity) {
         Product product = findProduct(productId);
-        stockService.restock(product, quantity);
+        StockMovement movement = stockService.restock(product, quantity);
+        stockMovementRepository.save(movement);
     }
 
     public void withdraw(UUID productId, int quantity) {
         Product product = findProduct(productId);
-        stockService.withdraw(product, quantity);
+        StockMovement movement = stockService.withdraw(product, quantity);
+        stockMovementRepository.save(movement);
     }
 }

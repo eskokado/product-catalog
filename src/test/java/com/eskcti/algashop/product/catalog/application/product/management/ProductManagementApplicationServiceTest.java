@@ -6,6 +6,8 @@ import com.eskcti.algashop.product.catalog.domain.model.category.CategoryReposit
 import com.eskcti.algashop.product.catalog.domain.model.product.Product;
 import com.eskcti.algashop.product.catalog.domain.model.product.ProductRepository;
 import com.eskcti.algashop.product.catalog.domain.model.product.ProductNotFoundException;
+import com.eskcti.algashop.product.catalog.domain.model.product.StockMovement;
+import com.eskcti.algashop.product.catalog.domain.model.product.StockMovementRepository;
 import com.eskcti.algashop.product.catalog.domain.model.product.StockService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -23,9 +25,10 @@ class ProductManagementApplicationServiceTest {
 
     private final ProductRepository productRepository = Mockito.mock(ProductRepository.class);
     private final CategoryRepository categoryRepository = Mockito.mock(CategoryRepository.class);
+    private final StockMovementRepository stockMovementRepository = Mockito.mock(StockMovementRepository.class);
     private final StockService stockService = Mockito.mock(StockService.class);
     private final ProductManagementApplicationService service =
-            new ProductManagementApplicationService(productRepository, categoryRepository, stockService);
+            new ProductManagementApplicationService(productRepository, categoryRepository, stockMovementRepository, stockService);
 
     @Test
     void shouldCreateProductAndReturnGeneratedId() {
@@ -189,9 +192,22 @@ class ProductManagementApplicationServiceTest {
                 .build();
         Mockito.when(productRepository.findById(productId)).thenReturn(Optional.of(product));
 
+        StockMovement movement = StockMovement.builder()
+                .productId(productId)
+                .movementQuantity(10)
+                .previousQuantity(0)
+                .newQuantity(10)
+                .type(StockMovement.MovementType.STOCK_IN)
+                .build();
+        Mockito.when(stockService.restock(product, 10)).thenReturn(movement);
+
         service.restock(productId, 10);
 
         Mockito.verify(stockService).restock(product, 10);
+        ArgumentCaptor<StockMovement> captor = ArgumentCaptor.forClass(StockMovement.class);
+        Mockito.verify(stockMovementRepository).save(captor.capture());
+        assertThat(captor.getValue().getProductId()).isEqualTo(productId);
+        assertThat(captor.getValue().getType()).isEqualTo(StockMovement.MovementType.STOCK_IN);
     }
 
     @Test
@@ -202,6 +218,7 @@ class ProductManagementApplicationServiceTest {
         assertThatThrownBy(() -> service.restock(productId, 10))
                 .isInstanceOf(ProductNotFoundException.class);
         Mockito.verify(stockService, Mockito.never()).restock(Mockito.any(), Mockito.anyInt());
+        Mockito.verify(stockMovementRepository, Mockito.never()).save(Mockito.any());
     }
 
     @Test
@@ -218,9 +235,22 @@ class ProductManagementApplicationServiceTest {
                 .build();
         Mockito.when(productRepository.findById(productId)).thenReturn(Optional.of(product));
 
+        StockMovement movement = StockMovement.builder()
+                .productId(productId)
+                .movementQuantity(5)
+                .previousQuantity(10)
+                .newQuantity(5)
+                .type(StockMovement.MovementType.STOCK_OUT)
+                .build();
+        Mockito.when(stockService.withdraw(product, 5)).thenReturn(movement);
+
         service.withdraw(productId, 5);
 
         Mockito.verify(stockService).withdraw(product, 5);
+        ArgumentCaptor<StockMovement> captor = ArgumentCaptor.forClass(StockMovement.class);
+        Mockito.verify(stockMovementRepository).save(captor.capture());
+        assertThat(captor.getValue().getProductId()).isEqualTo(productId);
+        assertThat(captor.getValue().getType()).isEqualTo(StockMovement.MovementType.STOCK_OUT);
     }
 
     @Test
@@ -231,5 +261,6 @@ class ProductManagementApplicationServiceTest {
         assertThatThrownBy(() -> service.withdraw(productId, 5))
                 .isInstanceOf(ProductNotFoundException.class);
         Mockito.verify(stockService, Mockito.never()).withdraw(Mockito.any(), Mockito.anyInt());
+        Mockito.verify(stockMovementRepository, Mockito.never()).save(Mockito.any());
     }
 }
