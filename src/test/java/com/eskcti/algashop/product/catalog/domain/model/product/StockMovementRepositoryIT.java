@@ -3,6 +3,7 @@ package com.eskcti.algashop.product.catalog.domain.model.product;
 import com.eskcti.algashop.product.catalog.infrastructure.persistence.MongoConfig;
 import com.eskcti.algashop.product.catalog.infrastructure.persistence.dataload.DataLoadProperties;
 import com.eskcti.algashop.product.catalog.infrastructure.persistence.dataload.DataLoader;
+import com.eskcti.algashop.product.catalog.TestcontainerMongoDBConfig;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,7 +20,8 @@ import java.util.UUID;
 @Import({
         MongoConfig.class,
         DataLoader.class,
-        DataLoadProperties.class
+        DataLoadProperties.class,
+        TestcontainerMongoDBConfig.class
 })
 class StockMovementRepositoryIT {
 

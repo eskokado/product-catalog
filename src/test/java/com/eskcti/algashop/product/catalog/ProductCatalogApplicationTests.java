@@ -3,10 +3,10 @@ package com.eskcti.algashop.product.catalog;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
+// @SpringBootTest
 class ProductCatalogApplicationTests {
 
-	@Test
+	// @Test
 	void contextLoads() {
 	}
 

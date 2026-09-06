@@ -7,6 +7,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 
 import java.time.OffsetDateTime;
@@ -29,6 +31,12 @@ public class MongoConfig {
                 new DateToOffsetDateTimeConverter()
         ));
     }
+
+    @Bean
+    public MongoTransactionManager mongoTransactionManager(MongoDatabaseFactory factory) {
+        return new MongoTransactionManager(factory);
+    }
+
 
     @WritingConverter
     static class OffsetDateTimeToDateConverter implements Converter<OffsetDateTime, Date> {
