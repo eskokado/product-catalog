@@ -5,16 +5,20 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.OffsetDateTime;
+import java.io.Serializable;
 import java.util.UUID;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class CategoryDetailOutput {
+public class CategoryDetailOutput implements Serializable {
 
     private UUID id;
     private String name;
     private Boolean enabled;
 
+    private Long version;
+    private OffsetDateTime updatedAt;
 }

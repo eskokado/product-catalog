@@ -1,11 +1,21 @@
 package com.eskcti.algashop.product.catalog.application.category.query;
 
+import com.eskcti.algashop.product.catalog.application.PageModel;
+import org.springframework.cache.annotation.Cacheable;
+
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import com.eskcti.algashop.product.catalog.application.PageModel;
 
 public interface CategoryQueryService {
+    @Cacheable(cacheNames = "algashop:categories-filter:v1",
+            key = "'default'",
+            condition = "#filter.isCacheable()")
     PageModel<CategoryDetailOutput> filter(CategoryFilter filter);
 
+    @Cacheable(cacheNames = "algashop:categories:v1", key = "#categoryId")
     CategoryDetailOutput findById(UUID categoryId);
+
+    OffsetDateTime lastModified();
 }
