@@ -9,7 +9,10 @@ import com.eskcti.algashop.product.catalog.application.category.query.CategoryOu
 import com.eskcti.algashop.product.catalog.application.category.query.CategoryQueryService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.web.context.request.WebRequest;
 
+import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -46,7 +49,7 @@ class CategoryControllerTest {
                 .build();
         Mockito.when(categoryQueryService.findById(categoryId)).thenReturn(output);
 
-        assertThat(controller.findById(categoryId)).isSameAs(output);
+        assertThat(controller.findById(categoryId).getBody()).isSameAs(output);
     }
 
     @Test
@@ -90,6 +93,51 @@ class CategoryControllerTest {
                 .build();
         Mockito.when(categoryQueryService.filter(filter)).thenReturn(page);
 
-        assertThat(controller.filter(filter)).isSameAs(page);
+        WebRequest webRequest = Mockito.mock(WebRequest.class);
+        Mockito.when(webRequest.checkNotModified(Mockito.anyLong())).thenReturn(false);
+        Mockito.when(categoryQueryService.lastModified()).thenReturn(Instant.now().atOffset(java.time.ZoneOffset.UTC));
+
+        assertThat(controller.filter(filter, webRequest).getBody()).isSameAs(page);
+    }
+
+    @Test
+    void shouldReturnNotModifiedWhenCacheIsValid() {
+        CategoryFilter filter = CategoryFilter.defaultFilter();
+
+        WebRequest webRequest = Mockito.mock(WebRequest.class);
+        Mockito.when(webRequest.checkNotModified(Mockito.anyLong())).thenReturn(true);
+        Mockito.when(categoryQueryService.lastModified()).thenReturn(Instant.now().atOffset(java.time.ZoneOffset.UTC));
+
+        var response = controller.filter(filter, webRequest);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(304);
+        assertThat(response.getBody()).isNull();
+    }
+
+    @Test
+    void shouldFilterWithCacheableFilterAndReturnResponseWithCacheHeaders() {
+        CategoryFilter filter = CategoryFilter.defaultFilter();
+
+        PageModel<CategoryDetailOutput> page = PageModel.<CategoryDetailOutput>builder()
+                .number(0)
+                .size(15)
+                .totalPages(1)
+                .totalElements(1)
+                .content(List.of(CategoryOutputTestDataBuilder.aCategory().build()))
+                .build();
+
+        OffsetDateTime lastModified = Instant.now().atOffset(java.time.ZoneOffset.UTC);
+
+        WebRequest webRequest = Mockito.mock(WebRequest.class);
+        Mockito.when(webRequest.checkNotModified(Mockito.anyLong())).thenReturn(false);
+        Mockito.when(categoryQueryService.lastModified()).thenReturn(lastModified);
+        Mockito.when(categoryQueryService.filter(filter)).thenReturn(page);
+
+        var response = controller.filter(filter, webRequest);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        assertThat(response.getBody()).isSameAs(page);
+        assertThat(response.getHeaders().getCacheControl()).isNotNull();
+        assertThat(response.getHeaders().getLastModified()).isNotNull();
     }
 }

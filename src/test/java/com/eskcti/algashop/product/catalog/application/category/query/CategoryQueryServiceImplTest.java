@@ -10,6 +10,7 @@ import org.mockito.Mockito;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -131,5 +132,49 @@ class CategoryQueryServiceImplTest {
 
         assertThatCode(() -> service.findById(categoryId))
                 .isInstanceOf(DomainEntityNotFoundException.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void shouldReturnLastModifiedFromAggregation() {
+        java.util.Date now = new java.util.Date();
+        org.bson.Document document = new org.bson.Document("lastModified", now);
+
+        org.springframework.data.mongodb.core.aggregation.AggregationResults<org.bson.Document> aggregationResult =
+                Mockito.mock(org.springframework.data.mongodb.core.aggregation.AggregationResults.class);
+        Mockito.when(aggregationResult.getUniqueMappedResult()).thenReturn(document);
+
+        Mockito.when(mongoOperations.aggregate(
+                Mockito.any(org.springframework.data.mongodb.core.aggregation.Aggregation.class),
+                Mockito.eq("categories"),
+                Mockito.eq(org.bson.Document.class)))
+                .thenReturn(aggregationResult);
+
+        var result = service.lastModified();
+
+        assertThat(result).isNotNull();
+        assertThat(result.toInstant().toEpochMilli()).isEqualTo(now.toInstant().toEpochMilli());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void shouldReturnCurrentTimeWhenNoCategoriesExist() {
+        org.springframework.data.mongodb.core.aggregation.AggregationResults<org.bson.Document> emptyResult =
+                Mockito.mock(org.springframework.data.mongodb.core.aggregation.AggregationResults.class);
+        Mockito.when(emptyResult.getUniqueMappedResult()).thenReturn(null);
+
+        Mockito.when(mongoOperations.aggregate(
+                Mockito.any(org.springframework.data.mongodb.core.aggregation.Aggregation.class),
+                Mockito.eq("categories"),
+                Mockito.eq(org.bson.Document.class)))
+                .thenReturn(emptyResult);
+
+        var before = OffsetDateTime.now();
+        var result = service.lastModified();
+        var after = OffsetDateTime.now();
+
+        assertThat(result).isNotNull();
+        assertThat(result).isAfterOrEqualTo(before);
+        assertThat(result).isBeforeOrEqualTo(after);
     }
 }
