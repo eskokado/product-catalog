@@ -69,6 +69,7 @@ public class ProductBase {
     mockValidOrderFindById();
     mockFilterProducts();
     mockCreateProduct();
+    mockUpdateProduct();
     mockInvalidProductFindById();
   }
 
@@ -78,18 +79,25 @@ public class ProductBase {
   }
 
   private void mockCreateProduct() {
-    Mockito.when(productManagementApplicationService.create(Mockito.any(ProductInput.class)))
-        .thenReturn(createdProductId);
+    ProductDetailOutput createdOutput = ProductDetailOutputTestDataBuilder.aProduct()
+        .id(createdProductId)
+        .inStock(false)
+        .description("A Gamer Notebook!")
+        .category(CategoryMinimalOutput.builder()
+            .id(createdProductCategoryId)
+            .name("Notebook")
+            .build())
+        .build();
 
-    Mockito.when(productQueryService.findById(createdProductId))
+    Mockito.when(productManagementApplicationService.create(Mockito.any(ProductInput.class)))
+        .thenReturn(createdOutput);
+  }
+
+  private void mockUpdateProduct() {
+    Mockito.when(productManagementApplicationService.update(
+            Mockito.eq(validProductId), Mockito.any(ProductInput.class)))
         .thenReturn(ProductDetailOutputTestDataBuilder.aProduct()
-            .id(createdProductId)
-            .inStock(false)
-            .description("A Gamer Notebook!")
-            .category(CategoryMinimalOutput.builder()
-                .id(createdProductCategoryId)
-                .name("Notebook")
-                .build())
+            .id(validProductId)
             .build());
   }
 

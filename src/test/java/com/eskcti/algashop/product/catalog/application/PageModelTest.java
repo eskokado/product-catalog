@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
+import java.io.*;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -72,5 +73,32 @@ class PageModelTest {
         assertThat(result.getNumber()).isEqualTo(0);
         assertThat(result.getTotalElements()).isEqualTo(0);
         assertThat(result.getTotalPages()).isEqualTo(0);
+    }
+
+    @Test
+    void shouldBeSerializable() throws IOException, ClassNotFoundException {
+        PageModel<String> original = PageModel.<String>builder()
+                .number(2)
+                .size(10)
+                .totalPages(5)
+                .totalElements(50)
+                .content(List.of("a", "b", "c"))
+                .build();
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(bos);
+        oos.writeObject(original);
+        oos.flush();
+
+        ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+        ObjectInputStream ois = new ObjectInputStream(bis);
+        @SuppressWarnings("unchecked")
+        PageModel<String> deserialized = (PageModel<String>) ois.readObject();
+
+        assertThat(deserialized.getNumber()).isEqualTo(2);
+        assertThat(deserialized.getSize()).isEqualTo(10);
+        assertThat(deserialized.getTotalPages()).isEqualTo(5);
+        assertThat(deserialized.getTotalElements()).isEqualTo(50);
+        assertThat(deserialized.getContent()).containsExactly("a", "b", "c");
     }
 }

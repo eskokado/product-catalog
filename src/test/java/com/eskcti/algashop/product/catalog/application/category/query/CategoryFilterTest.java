@@ -32,4 +32,34 @@ class CategoryFilterTest {
         filter.setSortDirection(Sort.Direction.DESC);
         assertThat(filter.getSortDirectionOrDefault()).isEqualTo(Sort.Direction.DESC);
     }
+
+    @Test
+    void shouldReturnCacheableWhenDefaultFilter() {
+        CategoryFilter filter = CategoryFilter.defaultFilter();
+        assertThat(filter.isCacheable()).isTrue();
+    }
+
+    @Test
+    void shouldNotBeCacheableWhenFilterDiffersFromDefault() {
+        CategoryFilter filter = CategoryFilter.defaultFilter();
+        filter.setName("Electronics");
+        assertThat(filter.isCacheable()).isFalse();
+    }
+
+    @Test
+    void shouldCreateDefaultFilterWithExpectedValues() {
+        CategoryFilter filter = CategoryFilter.defaultFilter();
+
+        assertThat(filter.getName()).isNull();
+        assertThat(filter.getEnabled()).isTrue();
+        assertThat(filter.getPage()).isEqualTo(0);
+        assertThat(filter.getSize()).isEqualTo(15);
+        assertThat(filter.getSortDirection()).isEqualTo(Sort.Direction.ASC);
+        assertThat(filter.getSortByProperty()).isEqualTo(CategoryFilter.SortType.NAME);
+    }
+
+    @Test
+    void shouldReturnPropertyNameFromSortType() {
+        assertThat(CategoryFilter.SortType.NAME.getPropertyName()).isEqualTo("name");
+    }
 }

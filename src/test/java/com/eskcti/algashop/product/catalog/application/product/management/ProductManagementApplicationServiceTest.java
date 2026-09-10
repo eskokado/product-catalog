@@ -1,5 +1,7 @@
 package com.eskcti.algashop.product.catalog.application.product.management;
 
+import com.eskcti.algashop.product.catalog.application.product.query.ProductDetailOutput;
+import com.eskcti.algashop.product.catalog.application.utility.Mapper;
 import com.eskcti.algashop.product.catalog.domain.model.category.Category;
 import com.eskcti.algashop.product.catalog.domain.model.category.CategoryNotFoundException;
 import com.eskcti.algashop.product.catalog.domain.model.category.CategoryRepository;
@@ -27,11 +29,12 @@ class ProductManagementApplicationServiceTest {
     private final CategoryRepository categoryRepository = Mockito.mock(CategoryRepository.class);
     private final StockMovementRepository stockMovementRepository = Mockito.mock(StockMovementRepository.class);
     private final StockService stockService = Mockito.mock(StockService.class);
+    private final Mapper mapper = Mockito.mock(Mapper.class);
     private final ProductManagementApplicationService service =
-            new ProductManagementApplicationService(productRepository, categoryRepository, stockMovementRepository, stockService);
+            new ProductManagementApplicationService(productRepository, categoryRepository, stockMovementRepository, stockService, mapper);
 
     @Test
-    void shouldCreateProductAndReturnGeneratedId() {
+    void shouldCreateProductAndReturnDetail() {
         UUID categoryId = UUID.randomUUID();
         Category category = new Category("Notebook", true);
         Mockito.when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(category));
@@ -45,11 +48,18 @@ class ProductManagementApplicationServiceTest {
                 .description("A Gamer Notebook")
                 .build();
 
-        UUID createdId = service.create(input);
+        ProductDetailOutput output = ProductDetailOutput.builder()
+                .name("Notebook X11")
+                .brand("Deep Diver")
+                .build();
+        Mockito.when(mapper.convert(Mockito.any(Product.class), Mockito.eq(ProductDetailOutput.class)))
+                .thenReturn(output);
+
+        ProductDetailOutput result = service.create(input);
 
         ArgumentCaptor<Product> captor = ArgumentCaptor.forClass(Product.class);
         Mockito.verify(productRepository).save(captor.capture());
-        assertThat(createdId).isEqualTo(captor.getValue().getId());
+        assertThat(result).isSameAs(output);
         assertThat(captor.getValue().getName()).isEqualTo("Notebook X11");
         assertThat(captor.getValue().getBrand()).isEqualTo("Deep Diver");
         assertThat(captor.getValue().getDescription()).isEqualTo("A Gamer Notebook");

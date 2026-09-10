@@ -33,8 +33,7 @@ class ProductControllerTest {
         ProductDetailOutput output = ProductDetailOutputTestDataBuilder.aProduct()
                 .id(productId)
                 .build();
-        Mockito.when(productManagementApplicationService.create(input)).thenReturn(productId);
-        Mockito.when(productQueryService.findById(productId)).thenReturn(output);
+        Mockito.when(productManagementApplicationService.create(input)).thenReturn(output);
 
         ProductDetailOutput result = controller.create(input);
 
@@ -59,7 +58,7 @@ class ProductControllerTest {
                 .build();
         Mockito.when(productQueryService.findById(productId)).thenReturn(output);
 
-        assertThat(controller.findById(productId)).isSameAs(output);
+        assertThat(controller.findById(productId).getBody()).isSameAs(output);
     }
 
     @Test
@@ -69,7 +68,7 @@ class ProductControllerTest {
         ProductDetailOutput output = ProductDetailOutputTestDataBuilder.aProduct()
                 .id(productId)
                 .build();
-        Mockito.when(productQueryService.findById(productId)).thenReturn(output);
+        Mockito.when(productManagementApplicationService.update(productId, input)).thenReturn(output);
 
         ProductDetailOutput result = controller.update(productId, input);
 
