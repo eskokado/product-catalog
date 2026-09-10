@@ -2,7 +2,7 @@ spring:
   cache:
     type: redis
   mongodb:
-    uri: mongodb://localhost:27017/product_catalog?replicaSet=rs0&readPreference=primaryPreferred
+    uri: mongodb://localhost:27019/product_catalog?directConnection=true
   data:
     redis:
       host: localhost
