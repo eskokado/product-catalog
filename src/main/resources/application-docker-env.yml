@@ -1,4 +1,13 @@
 spring:
+  cache:
+    type: redis
+  data:
+    redis:
+      host: algashop-redis
+      port: 6379
+      password: algashop
+      database: 0
+      timeout: 20
   mongodb:
     uri: mongodb://algashop-mongodb-1:27017,algashop-mongodb-2:27017,algashop-mongodb-3:27017/product_catalog?replicaSet=rs0
 
