@@ -7,15 +7,6 @@ spring:
     mongodb:
       auto-index-creation: true
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health
-  endpoint:
-    health:
-      show-details: always
-
 logging:
   level:
     org.mongodb.driver.cluster: OFF
@@ -29,3 +20,25 @@ algashop:
         collection: categories
       - location: db/testdata/products.json
         collection: products
+
+management:
+  info:
+    env.enabled: true
+  health:
+    mongo:
+      enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+      group:
+        readiness:
+          include: mongo,readinessState
+      status:
+        order: "DOWN, OUT_OF_SERVICE, UNKNOWN, DEGRADED, UP"
+
+info:
+  app.name: AlgaShop Product Catalog API
