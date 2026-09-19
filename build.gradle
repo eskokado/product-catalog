@@ -85,6 +85,10 @@ dependencyManagement {
 	}
 }
 
+bootRun {
+	args = ['--spring.profiles.active=development']
+}
+
 contracts {
 	packageWithBaseClasses = "com.eskcti.algashop.product.catalog.contract.base"
 }
