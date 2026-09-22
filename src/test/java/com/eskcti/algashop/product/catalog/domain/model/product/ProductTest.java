@@ -544,4 +544,168 @@ class ProductTest {
 
         assertThat(product.getHasDiscount()).isFalse();
     }
+
+    @Test
+    void shouldStartWithoutImagesAndMainImage() {
+        Product product = new Product();
+
+        assertThat(product.getImages()).isEmpty();
+        assertThat(product.getMainImage()).isNull();
+    }
+
+    @Test
+    void shouldReturnUnmodifiableImagesSet() {
+        Product product = new Product();
+        product.addImage("photo.png");
+
+        assertThatThrownBy(() -> product.getImages().clear())
+                .isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    @Test
+    void shouldAddFirstImageAndSetAsMainImage() {
+        Product product = new Product();
+
+        UUID imageId = product.addImage("photo.png");
+
+        assertThat(product.getImages()).hasSize(1);
+        assertThat(product.getMainImage()).isNotNull();
+        assertThat(product.getMainImage().getId()).isEqualTo(imageId);
+        assertThat(product.getImage(imageId)).isPresent();
+        assertThat(product.getImage(imageId).get().getName()).isEqualTo("photo.png");
+    }
+
+    @Test
+    void shouldKeepFirstImageAsMainWhenAddingSecondImage() {
+        Product product = new Product();
+        UUID firstImageId = product.addImage("photo.png");
+
+        UUID secondImageId = product.addImage("other.png");
+
+        assertThat(product.getImages()).hasSize(2);
+        assertThat(product.getMainImage().getId()).isEqualTo(firstImageId);
+        assertThat(product.getImage(secondImageId)).isPresent();
+    }
+
+    @Test
+    void shouldNotAllowNullImageNameOnAdd() {
+        Product product = new Product();
+
+        assertThatThrownBy(() -> product.addImage(null))
+                .isInstanceOf(NullPointerException.class);
+        assertThat(product.getImages()).isEmpty();
+    }
+
+    @Test
+    void shouldFindImageById() {
+        Product product = new Product();
+        UUID imageId = product.addImage("photo.png");
+
+        assertThat(product.getImage(imageId)).isPresent();
+        assertThat(product.getImage(imageId).get().getId()).isEqualTo(imageId);
+    }
+
+    @Test
+    void shouldReturnEmptyWhenImageIdDoesNotExist() {
+        Product product = new Product();
+        product.addImage("photo.png");
+
+        assertThat(product.getImage(UUID.randomUUID())).isEmpty();
+    }
+
+    @Test
+    void shouldNotAllowNullImageIdOnGet() {
+        Product product = new Product();
+
+        assertThatThrownBy(() -> product.getImage(null))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void shouldChangeMainImage() {
+        Product product = new Product();
+        product.addImage("photo.png");
+        UUID secondImageId = product.addImage("other.png");
+
+        product.changeMainImage(secondImageId);
+
+        assertThat(product.getMainImage().getId()).isEqualTo(secondImageId);
+        assertThat(product.getMainImage().getName()).isEqualTo("other.png");
+    }
+
+    @Test
+    void shouldNotAllowNullImageIdOnChangeMainImage() {
+        Product product = new Product();
+
+        assertThatThrownBy(() -> product.changeMainImage(null))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void shouldThrowWhenChangingMainImageToUnknownImage() {
+        Product product = new Product();
+        product.addImage("photo.png");
+        UUID unknownImageId = UUID.randomUUID();
+
+        assertThatThrownBy(() -> product.changeMainImage(unknownImageId))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining(unknownImageId.toString());
+    }
+
+    @Test
+    void shouldRemoveNonMainImageKeepingMainImage() {
+        Product product = new Product();
+        UUID mainImageId = product.addImage("photo.png");
+        UUID secondImageId = product.addImage("other.png");
+
+        product.removeImage(secondImageId);
+
+        assertThat(product.getImages()).hasSize(1);
+        assertThat(product.getMainImage().getId()).isEqualTo(mainImageId);
+        assertThat(product.getImage(secondImageId)).isEmpty();
+    }
+
+    @Test
+    void shouldPromoteRemainingImageWhenRemovingMainImage() {
+        Product product = new Product();
+        product.addImage("photo.png");
+        UUID mainImageId = product.addImage("main.png");
+        product.changeMainImage(mainImageId);
+
+        product.removeImage(mainImageId);
+
+        assertThat(product.getImages()).hasSize(1);
+        assertThat(product.getMainImage()).isNotNull();
+        assertThat(product.getMainImage().getId()).isNotEqualTo(mainImageId);
+    }
+
+    @Test
+    void shouldClearMainImageWhenRemovingLastImage() {
+        Product product = new Product();
+        UUID imageId = product.addImage("photo.png");
+
+        product.removeImage(imageId);
+
+        assertThat(product.getImages()).isEmpty();
+        assertThat(product.getMainImage()).isNull();
+    }
+
+    @Test
+    void shouldNotAllowNullImageIdOnRemove() {
+        Product product = new Product();
+
+        assertThatThrownBy(() -> product.removeImage(null))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void shouldThrowWhenRemovingUnknownImage() {
+        Product product = new Product();
+        product.addImage("photo.png");
+        UUID unknownImageId = UUID.randomUUID();
+
+        assertThatThrownBy(() -> product.removeImage(unknownImageId))
+                .isInstanceOf(DomainException.class)
+                .hasMessageContaining(unknownImageId.toString());
+    }
 }
