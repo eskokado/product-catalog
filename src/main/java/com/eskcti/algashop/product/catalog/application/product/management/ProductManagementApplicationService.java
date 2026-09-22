@@ -31,8 +31,6 @@ public class ProductManagementApplicationService {
 
     @CachePut(cacheNames = "algashop:products:v1", key = "#result.id",
             condition = "#input.enabled == true")
-    @CacheEvict(cacheNames = "algashop:products:v1", key = "#productId",
-            condition = "#input.enabled == false")
     public ProductDetailOutput create(ProductInput input) {
         Product product = mapToProduct(input);
         productRepository.save(product);
@@ -70,6 +68,8 @@ public class ProductManagementApplicationService {
 
     @CachePut(cacheNames = "algashop:products:v1", key = "#result.id",
             condition = "#input.enabled == true")
+    @CacheEvict(cacheNames = "algashop:products:v1", key = "#productId",
+            condition = "#input.enabled == false")
     public ProductDetailOutput update(UUID productId, ProductInput input) {
         Product product = findProduct(productId);
         Category category = findCategory(input.getCategoryId());
