@@ -8,6 +8,7 @@ import com.eskcti.algashop.product.catalog.domain.model.product.ProductRepositor
 import com.eskcti.algashop.product.catalog.infrastructure.persistence.product.ProductQueryServiceImpl;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -494,5 +495,30 @@ class ProductQueryServiceImplTest {
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getTotalElements()).isEqualTo(1);
+    }
+
+    @Test
+    void shouldApplyTextScoreFieldOperationWhenFilteringWithTerm() {
+        ProductFilter filter = new ProductFilter();
+        filter.setPage(0);
+        filter.setSize(10);
+        filter.setTerm("notebook");
+
+        when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(1L);
+        when(mongoOperations.aggregate(any(Aggregation.class), eq(Product.class), eq(ProductSummaryOutput.class)))
+                .thenReturn(new AggregationResults<>(Collections.emptyList(), new Document()));
+
+        service.filter(filter);
+
+        ArgumentCaptor<Aggregation> captor = ArgumentCaptor.forClass(Aggregation.class);
+        verify(mongoOperations).aggregate(captor.capture(), eq(Product.class), eq(ProductSummaryOutput.class));
+
+        boolean hasTextScoreOperation = captor.getValue()
+                .toPipeline(Aggregation.DEFAULT_CONTEXT)
+                .stream()
+                .anyMatch(document -> document.containsKey("$addFields")
+                        && ((Document) document.get("$addFields")).containsKey("score"));
+
+        assertThat(hasTextScoreOperation).isTrue();
     }
 }
