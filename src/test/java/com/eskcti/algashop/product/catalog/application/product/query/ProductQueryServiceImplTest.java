@@ -36,6 +36,27 @@ class ProductQueryServiceImplTest {
     private final MongoOperations mongoOperations = Mockito.mock(MongoOperations.class);
     private final ProductQueryServiceImpl service = new ProductQueryServiceImpl(productRepository, mapper, mongoOperations);
 
+    private Product aProduct() {
+        return Product.builder()
+                .name("Notebook X11")
+                .brand("Deep Diver")
+                .description("A Gamer Notebook with long description for testing abbreviation")
+                .regularPrice(new BigDecimal("1500.00"))
+                .salePrice(new BigDecimal("1000.00"))
+                .enabled(true)
+                .category(new Category("Electronics", true))
+                .build();
+    }
+
+    private void stubAggregationReturning(List<Product> products) {
+        when(mongoOperations.aggregate(any(Aggregation.class), eq(Product.class), eq(Product.class)))
+                .thenReturn(new AggregationResults<>(products, new Document()));
+    }
+
+    private void stubMappingTo(ProductSummaryOutput summaryOutput) {
+        when(mapper.convert(any(Product.class), eq(ProductSummaryOutput.class))).thenReturn(summaryOutput);
+    }
+
     @Test
     void shouldFindByIdReturningMappedOutput() {
         UUID productId = UUID.randomUUID();
@@ -95,12 +116,9 @@ class ProductQueryServiceImplTest {
                 .brand("Deep Diver")
                 .build();
 
-        AggregationResults<ProductSummaryOutput> aggregationResults =
-                new AggregationResults<>(List.of(summaryOutput), new Document());
-
         when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(1L);
-        when(mongoOperations.aggregate(any(Aggregation.class), eq(Product.class), eq(ProductSummaryOutput.class)))
-                .thenReturn(aggregationResults);
+        stubAggregationReturning(List.of(aProduct()));
+        stubMappingTo(summaryOutput);
 
         var result = service.filter(filter);
 
@@ -393,12 +411,8 @@ class ProductQueryServiceImplTest {
         filter.setPage(0);
         filter.setSize(10);
 
-        AggregationResults<ProductSummaryOutput> aggregationResults =
-                new AggregationResults<>(Collections.emptyList(), new Document());
-
         when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(25L);
-        when(mongoOperations.aggregate(any(Aggregation.class), eq(Product.class), eq(ProductSummaryOutput.class)))
-                .thenReturn(aggregationResults);
+        stubAggregationReturning(Collections.emptyList());
 
         var result = service.filter(filter);
 
@@ -419,12 +433,9 @@ class ProductQueryServiceImplTest {
                 .score(1.5f)
                 .build();
 
-        AggregationResults<ProductSummaryOutput> aggregationResults =
-                new AggregationResults<>(List.of(summaryOutput), new Document());
-
         when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(1L);
-        when(mongoOperations.aggregate(any(Aggregation.class), eq(Product.class), eq(ProductSummaryOutput.class)))
-                .thenReturn(aggregationResults);
+        stubAggregationReturning(List.of(aProduct()));
+        stubMappingTo(summaryOutput);
 
         var result = service.filter(filter);
 
@@ -457,12 +468,9 @@ class ProductQueryServiceImplTest {
                 .score(1.5f)
                 .build();
 
-        AggregationResults<ProductSummaryOutput> aggregationResults =
-                new AggregationResults<>(List.of(summaryOutput), new Document());
-
         when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(1L);
-        when(mongoOperations.aggregate(any(Aggregation.class), eq(Product.class), eq(ProductSummaryOutput.class)))
-                .thenReturn(aggregationResults);
+        stubAggregationReturning(List.of(aProduct()));
+        stubMappingTo(summaryOutput);
 
         var result = service.filter(filter);
 
@@ -484,12 +492,9 @@ class ProductQueryServiceImplTest {
                 .brand("Deep Diver")
                 .build();
 
-        AggregationResults<ProductSummaryOutput> aggregationResults =
-                new AggregationResults<>(List.of(summaryOutput), new Document());
-
         when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(1L);
-        when(mongoOperations.aggregate(any(Aggregation.class), eq(Product.class), eq(ProductSummaryOutput.class)))
-                .thenReturn(aggregationResults);
+        stubAggregationReturning(List.of(aProduct()));
+        stubMappingTo(summaryOutput);
 
         var result = service.filter(filter);
 
@@ -505,13 +510,12 @@ class ProductQueryServiceImplTest {
         filter.setTerm("notebook");
 
         when(mongoOperations.count(any(Query.class), eq(Product.class))).thenReturn(1L);
-        when(mongoOperations.aggregate(any(Aggregation.class), eq(Product.class), eq(ProductSummaryOutput.class)))
-                .thenReturn(new AggregationResults<>(Collections.emptyList(), new Document()));
+        stubAggregationReturning(List.of(aProduct()));
 
         service.filter(filter);
 
         ArgumentCaptor<Aggregation> captor = ArgumentCaptor.forClass(Aggregation.class);
-        verify(mongoOperations).aggregate(captor.capture(), eq(Product.class), eq(ProductSummaryOutput.class));
+        verify(mongoOperations).aggregate(captor.capture(), eq(Product.class), eq(Product.class));
 
         boolean hasTextScoreOperation = captor.getValue()
                 .toPipeline(Aggregation.DEFAULT_CONTEXT)

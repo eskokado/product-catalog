@@ -8,6 +8,7 @@ import java.net.URI;
 import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class StorageProviderFakeImplTest {
 
@@ -39,12 +40,30 @@ class StorageProviderFakeImplTest {
     }
 
     @Test
+    void shouldThrowWhenFileNameIsNotAValidUriComponent() {
+        FileReference reference = FileReference.builder()
+                .fileName("photo image.png")
+                .contentType(MediaType.IMAGE_PNG)
+                .contentLength(2048L)
+                .expiresIn(Duration.ofMinutes(5))
+                .build();
+
+        assertThatThrownBy(() -> storageProvider.requestUploadUrl(reference))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void shouldDeleteFileWithoutError() {
         storageProvider.deleteFile("photo.png");
     }
 
     @Test
+    void shouldReturnTrueWhenFileExists() {
+        assertThat(storageProvider.fileExists("photo.png")).isTrue();
+    }
+
+    @Test
     void shouldReturnFalseWhenFileDoesNotExist() {
-        assertThat(storageProvider.fileExists("photo.png")).isFalse();
+        assertThat(storageProvider.fileExists("fail.jpg")).isFalse();
     }
 }
