@@ -79,9 +79,12 @@ public class ProductQueryServiceImpl implements ProductQueryService {
 
         Aggregation aggregation = newAggregation(operations);
 
-        List<ProductSummaryOutput> productSummaryOutputs = mongoOperations
-                .aggregate(aggregation, Product.class, ProductSummaryOutput.class)
+        List<Product> products = mongoOperations
+                .aggregate(aggregation, Product.class, Product.class)
                 .getMappedResults();
+
+        List<ProductSummaryOutput> productSummaryOutputs = products.stream()
+                .map(p -> mapper.convert(p, ProductSummaryOutput.class)).toList();
 
         int totalPages = (int) Math.ceil((double) totalElements / (double) filter.getSize());
 
