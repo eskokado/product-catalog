@@ -3,6 +3,7 @@ package com.eskcti.algashop.product.catalog.presentation;
 import com.eskcti.algashop.product.catalog.application.ResourceNotFoundException;
 import com.eskcti.algashop.product.catalog.domain.model.DomainEntityNotFoundException;
 import com.eskcti.algashop.product.catalog.domain.model.DomainException;
+import com.eskcti.algashop.product.catalog.infrastructure.storage.s3.StorageProviderException;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.context.MessageSource;
@@ -65,6 +66,18 @@ class ApiExceptionHandlerTest {
         assertThat(problemDetail.getStatus()).isEqualTo(422);
         assertThat(problemDetail.getTitle()).isEqualTo("Unprocessable Content");
         assertThat(problemDetail.getDetail()).isEqualTo("sale price above regular price");
+        assertThat(problemDetail.getType().toString()).isEqualTo("/errors/unprocessable-content");
+    }
+
+    @Test
+    void shouldHandleUnprocessableContentFromStorageProviderException() {
+        ProblemDetail problemDetail = handler
+                .handleUnprocessableContentException(
+                        new StorageProviderException("Remote file photo.png already exists"));
+
+        assertThat(problemDetail.getStatus()).isEqualTo(422);
+        assertThat(problemDetail.getTitle()).isEqualTo("Unprocessable Content");
+        assertThat(problemDetail.getDetail()).isEqualTo("Remote file photo.png already exists");
         assertThat(problemDetail.getType().toString()).isEqualTo("/errors/unprocessable-content");
     }
 

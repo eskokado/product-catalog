@@ -7,7 +7,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.http.MediaType;
 
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 
@@ -20,6 +22,14 @@ class UploadRequestApplicationServiceTest {
     private final UploadRequestApplicationService service =
             new UploadRequestApplicationService(storageProvider);
 
+    private static URL url(String value) {
+        try {
+            return URI.create(value).toURL();
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
     private UploadRequestInput input(String originalFileName, Long contentLength) {
         UploadRequestInput input = new UploadRequestInput();
         input.setOriginalFileName(originalFileName);
@@ -30,7 +40,7 @@ class UploadRequestApplicationServiceTest {
     @Test
     void shouldRequestPresignedUrlForPngFile() {
         Mockito.when(storageProvider.requestUploadUrl(Mockito.any()))
-                .thenReturn(URI.create("http://localhost:4566/upload?token=abc"));
+                .thenReturn(url("http://localhost:4566/upload?token=abc"));
 
         UploadResponseOutput output = service.requestPreSignedUrl(input("photo.png", 2048L));
 
@@ -44,12 +54,13 @@ class UploadRequestApplicationServiceTest {
         Mockito.verify(storageProvider).requestUploadUrl(captor.capture());
         assertThat(captor.getValue().getContentType()).isEqualTo(MediaType.IMAGE_PNG);
         assertThat(captor.getValue().getExpiresIn()).isEqualTo(Duration.ofMinutes(5));
+        assertThat(captor.getValue().isAllowPublicRead()).isTrue();
     }
 
     @Test
     void shouldRequestPresignedUrlForJpgFile() {
         Mockito.when(storageProvider.requestUploadUrl(Mockito.any()))
-                .thenReturn(URI.create("http://localhost:4566/upload?token=abc"));
+                .thenReturn(url("http://localhost:4566/upload?token=abc"));
 
         UploadResponseOutput output = service.requestPreSignedUrl(input("photo.jpg", 1024L));
 
@@ -64,7 +75,7 @@ class UploadRequestApplicationServiceTest {
     @Test
     void shouldSetExpiresAtFiveMinutesInTheFuture() {
         Mockito.when(storageProvider.requestUploadUrl(Mockito.any()))
-                .thenReturn(URI.create("http://localhost:4566/upload?token=abc"));
+                .thenReturn(url("http://localhost:4566/upload?token=abc"));
 
         OffsetDateTime before = OffsetDateTime.now().plus(Duration.ofMinutes(5));
         UploadResponseOutput output = service.requestPreSignedUrl(input("photo.png", 2048L));
@@ -77,7 +88,7 @@ class UploadRequestApplicationServiceTest {
     @Test
     void shouldGenerateRandomRemoteFileName() {
         Mockito.when(storageProvider.requestUploadUrl(Mockito.any()))
-                .thenReturn(URI.create("http://localhost:4566/upload?token=abc"));
+                .thenReturn(url("http://localhost:4566/upload?token=abc"));
 
         UploadResponseOutput first = service.requestPreSignedUrl(input("photo.png", 2048L));
         UploadResponseOutput second = service.requestPreSignedUrl(input("photo.png", 2048L));

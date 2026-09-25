@@ -1,7 +1,7 @@
 package com.eskcti.algashop.product.catalog.presentation;
 
 import com.eskcti.algashop.product.catalog.application.upload.UploadRequestApplicationService;
-import com.eskcti.algashop.product.catalog.infrastructure.storage.fake.StorageProviderFakeImpl;
+import com.eskcti.algashop.product.catalog.infrastructure.storage.StorageProviderStub;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -16,7 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = UploadRequestController.class)
-@Import({UploadRequestApplicationService.class, StorageProviderFakeImpl.class})
+@Import({UploadRequestApplicationService.class, StorageProviderStub.class})
 class UploadRequestControllerIT {
 
     @Autowired
