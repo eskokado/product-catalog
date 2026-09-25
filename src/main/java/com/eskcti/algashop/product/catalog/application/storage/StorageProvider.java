@@ -1,9 +1,10 @@
 package com.eskcti.algashop.product.catalog.application.storage;
 
-import java.net.URI;
+import java.net.URL;
 
 public interface StorageProvider {
-    URI requestUploadUrl(FileReference fileReference);
+    boolean healthCheck();
+    URL requestUploadUrl(FileReference fileReference);
     void deleteFile(String remoteFileName);
     boolean fileExists(String remoteFileName);
 }

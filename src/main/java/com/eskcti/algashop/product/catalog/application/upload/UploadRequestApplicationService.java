@@ -8,7 +8,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
-import java.net.URI;
+import java.net.URL;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -33,9 +33,10 @@ public class UploadRequestApplicationService {
                 .contentType(mediaType)
                 .fileName(UUID.randomUUID() + "." + extension)
                 .expiresIn(Duration.ofMinutes(5))
+                .allowPublicRead(true)
                 .build();
 
-        URI presignedUrl = storageProvider.requestUploadUrl(fileReference);
+        URL presignedUrl = storageProvider.requestUploadUrl(fileReference);
         OffsetDateTime expiresAt = OffsetDateTime.now().plus(fileReference.getExpiresIn());
 
         return UploadResponseOutput.builder()
