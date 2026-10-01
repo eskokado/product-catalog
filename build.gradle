@@ -155,7 +155,7 @@ def jacocoCoverageExcludes = [
 	"**/ResilienceCacheErrorHandler.class",
 	"**/CustomRedisCacheHealthIndicator.class",
 	"**/ProductCatalogSecurityConfig.class",
-	"**/SecurityAnnotations.java"
+	"**/SecurityAnnotations.class"
 ]
 
 jacocoTestReport {
