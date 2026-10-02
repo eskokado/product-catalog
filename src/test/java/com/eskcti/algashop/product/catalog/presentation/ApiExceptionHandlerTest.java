@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
@@ -101,5 +102,26 @@ class ApiExceptionHandlerTest {
         assertThat(problemDetail.getTitle()).isEqualTo("Invalid fields");
         assertThat(problemDetail.getDetail()).isEqualTo("One or more fields are invalid");
         assertThat(problemDetail.getType().toString()).isEqualTo("/errors/invalid-fields");
+    }
+
+    @Test
+    void shouldHandleGenericExceptionAsInternalServerError() {
+        ProblemDetail problemDetail = handler.handleException(new IllegalStateException("boom"));
+
+        assertThat(problemDetail.getStatus()).isEqualTo(500);
+        assertThat(problemDetail.getTitle()).isEqualTo("Internal Server Error");
+        assertThat(problemDetail.getDetail()).isEqualTo("An unexpected internal error occurred.");
+        assertThat(problemDetail.getType().toString()).isEqualTo("/errors/internal");
+    }
+
+    @Test
+    void shouldHandleAuthorizationDeniedExceptionAsForbidden() {
+        ProblemDetail problemDetail = handler.handleAuthorizationDeniedException(
+                new AuthorizationDeniedException("Access is denied"));
+
+        assertThat(problemDetail.getStatus()).isEqualTo(403);
+        assertThat(problemDetail.getTitle()).isEqualTo("Forbidden");
+        assertThat(problemDetail.getDetail()).isEqualTo("Access is denied");
+        assertThat(problemDetail.getType().toString()).isEqualTo("/errors/forbidden");
     }
 }
