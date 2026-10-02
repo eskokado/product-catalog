@@ -6,6 +6,11 @@ spring:
   data:
     mongodb:
       auto-index-creation: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://algashop-authorization-server:8081
 
 logging:
   level:
