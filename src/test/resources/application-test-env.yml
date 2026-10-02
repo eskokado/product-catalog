@@ -1,3 +1,16 @@
 # spring:
 #   mongodb:
 #     uri: mongodb://root:algashop@localhost:27017/product_catalog_test?authSource=admin
+
+spring:
+  cloud:
+    aws:
+      region:
+        static: us-east-1
+      endpoint: http://localhost:4566
+      credentials:
+        access-key: LSIAQAAAAAAVNCBMPNSG
+        secret-key: test
+      s3:
+        enabled: true
+        path-style-access-enabled: true

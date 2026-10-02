@@ -19,6 +19,11 @@ logging:
     org.mongodb.driver.connection: DEBUG
 
 algashop:
+  mapping:
+    image-storage-url: http://localhost:4566/algashop-product-image
+  storage:
+    s3:
+      bucket-name: algashop-product-image
   data-load:
     enabled: true
     auto-delete: true
