@@ -4,7 +4,7 @@ import com.eskcti.algashop.product.catalog.infrastructure.persistence.MongoConfi
 import com.eskcti.algashop.product.catalog.infrastructure.persistence.dataload.DataLoadProperties;
 import com.eskcti.algashop.product.catalog.infrastructure.persistence.dataload.DataLoader;
 import com.eskcti.algashop.product.catalog.infrastructure.persistence.product.QuantityInStockAdjustmentMongoDBImpl;
-import com.eskcti.algashop.product.catalog.TestcontainerMongoDBConfig;
+import com.eskcti.algashop.product.catalog.utils.TestcontainerMongoDBConfig;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
