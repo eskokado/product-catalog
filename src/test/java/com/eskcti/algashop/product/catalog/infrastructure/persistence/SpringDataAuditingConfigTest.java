@@ -1,5 +1,6 @@
 package com.eskcti.algashop.product.catalog.infrastructure.persistence;
 
+import com.eskcti.algashop.product.catalog.application.security.SecurityCheckApplicationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.auditing.DateTimeProvider;
 import org.springframework.data.domain.AuditorAware;
@@ -12,6 +13,8 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class SpringDataAuditingConfigTest {
 
@@ -28,11 +31,36 @@ class SpringDataAuditingConfigTest {
     }
 
     @Test
-    void shouldProvideCurrentAuditor() {
-        AuditorAware<UUID> auditorAware = new SpringDataAuditingConfig().auditorProvider();
+    void shouldProvideCurrentAuditorWhenUserIsAuthenticated() {
+        SecurityCheckApplicationService securityCheck = mock(SecurityCheckApplicationService.class);
+        UUID userId = UUID.randomUUID();
+        when(securityCheck.isAuthenticated()).thenReturn(true);
+        when(securityCheck.isMachineAuthenticated()).thenReturn(false);
+        when(securityCheck.getAuthenticatedUserId()).thenReturn(userId);
 
-        Optional<UUID> auditor = auditorAware.getCurrentAuditor();
+        AuditorAware<UUID> auditorAware = new SpringDataAuditingConfig().auditorProvider(securityCheck);
 
-        assertThat(auditor).isPresent();
+        assertThat(auditorAware.getCurrentAuditor()).contains(userId);
+    }
+
+    @Test
+    void shouldProvideNoAuditorWhenNotAuthenticated() {
+        SecurityCheckApplicationService securityCheck = mock(SecurityCheckApplicationService.class);
+        when(securityCheck.isAuthenticated()).thenReturn(false);
+
+        AuditorAware<UUID> auditorAware = new SpringDataAuditingConfig().auditorProvider(securityCheck);
+
+        assertThat(auditorAware.getCurrentAuditor()).isEmpty();
+    }
+
+    @Test
+    void shouldProvideNoAuditorWhenMachineAuthenticated() {
+        SecurityCheckApplicationService securityCheck = mock(SecurityCheckApplicationService.class);
+        when(securityCheck.isAuthenticated()).thenReturn(true);
+        when(securityCheck.isMachineAuthenticated()).thenReturn(true);
+
+        AuditorAware<UUID> auditorAware = new SpringDataAuditingConfig().auditorProvider(securityCheck);
+
+        assertThat(auditorAware.getCurrentAuditor()).isEmpty();
     }
 }
