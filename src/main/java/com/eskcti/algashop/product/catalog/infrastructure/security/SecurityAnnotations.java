@@ -9,29 +9,34 @@ import java.lang.annotation.Target;
 
 public class SecurityAnnotations {
 
-    @Target({ElementType.METHOD, ElementType.TYPE})
+    @Target({ ElementType.METHOD, ElementType.TYPE })
     @Retention(RetentionPolicy.RUNTIME)
     @PreAuthorize("hasAuthority('SCOPE_products:read')")
-    public @interface CanReadProducts {}
+    public @interface CanReadProducts {
+    }
 
-    @Target({ElementType.METHOD, ElementType.TYPE})
+    @Target({ ElementType.METHOD, ElementType.TYPE })
     @Retention(RetentionPolicy.RUNTIME)
     @PreAuthorize("hasAuthority('SCOPE_products:write')")
-    public @interface CanWriteProducts {}
+    public @interface CanWriteProducts {
+    }
 
-    @Target({ElementType.METHOD, ElementType.TYPE})
+    @Target({ ElementType.METHOD, ElementType.TYPE })
     @Retention(RetentionPolicy.RUNTIME)
-    @PreAuthorize("hasAuthority('SCOPE_products:stock:write')")
-    public @interface CanWriteProductsStock {}
+    @PreAuthorize("hasAuthority('SCOPE_products:stock:write') and hasRole('MANAGER')")
+    public @interface CanWriteProductsStock {
+    }
 
-    @Target({ElementType.METHOD, ElementType.TYPE})
+    @Target({ ElementType.METHOD, ElementType.TYPE })
     @Retention(RetentionPolicy.RUNTIME)
     @PreAuthorize("hasAuthority('SCOPE_categories:read')")
-    public @interface CanReadCategories {}
+    public @interface CanReadCategories {
+    }
 
-    @Target({ElementType.METHOD, ElementType.TYPE})
+    @Target({ ElementType.METHOD, ElementType.TYPE })
     @Retention(RetentionPolicy.RUNTIME)
     @PreAuthorize("hasAuthority('SCOPE_categories:write')")
-    public @interface CanWriteCategories {}
+    public @interface CanWriteCategories {
+    }
 
 }
