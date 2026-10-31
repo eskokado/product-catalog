@@ -1,6 +1,8 @@
 package com.eskcti.algashop.product.catalog;
 
 import com.eskcti.algashop.product.catalog.infrastructure.security.ProductCatalogSecurityConfig;
+import com.eskcti.algashop.product.catalog.infrastructure.security.token.JwtAuthenticationConverterConfig;
+import com.eskcti.algashop.product.catalog.infrastructure.security.token.JwtGrantedAuthoritiesDelegatingConverter;
 import com.eskcti.algashop.product.catalog.utils.MockJwtDecoderConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
@@ -18,7 +20,12 @@ import static com.eskcti.algashop.product.catalog.utils.MockJwtDecoderFactory.DE
  * do resource server aos escopos do token; o {@link MockJwtDecoderConfig} entrega um
  * {@code JwtDecoder} deterministico, sem falar com o authorization-server.</p>
  */
-@Import({ProductCatalogSecurityConfig.class, MockJwtDecoderConfig.class})
+@Import({
+        ProductCatalogSecurityConfig.class,
+        MockJwtDecoderConfig.class,
+        JwtAuthenticationConverterConfig.class,
+        JwtGrantedAuthoritiesDelegatingConverter.class
+})
 public abstract class AbstractControllerIT {
 
     @Autowired
