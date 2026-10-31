@@ -17,13 +17,13 @@ public class SecurityAnnotations {
 
     @Target({ ElementType.METHOD, ElementType.TYPE })
     @Retention(RetentionPolicy.RUNTIME)
-    @PreAuthorize("hasAuthority('SCOPE_products:write')")
+    @PreAuthorize("hasAuthority('SCOPE_products:write') and (hasRole('MANAGER') or hasRole('OPERATOR'))")
     public @interface CanWriteProducts {
     }
 
     @Target({ ElementType.METHOD, ElementType.TYPE })
     @Retention(RetentionPolicy.RUNTIME)
-    @PreAuthorize("hasAuthority('SCOPE_products:stock:write')")
+    @PreAuthorize("hasAuthority('SCOPE_products:stock:write') and hasRole('MANAGER')")
     public @interface CanWriteProductsStock {
     }
 
@@ -35,7 +35,7 @@ public class SecurityAnnotations {
 
     @Target({ ElementType.METHOD, ElementType.TYPE })
     @Retention(RetentionPolicy.RUNTIME)
-    @PreAuthorize("hasAuthority('SCOPE_categories:write')")
+    @PreAuthorize("hasAuthority('SCOPE_categories:write') and (hasRole('MANAGER') or hasRole('OPERATOR'))")
     public @interface CanWriteCategories {
     }
 
