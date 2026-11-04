@@ -7,7 +7,7 @@ spring:
       port: 6379
       password: algashop
       database: 0
-      timeout: 20
+      timeout: 5s
   mongodb:
     uri: mongodb://algashop-mongodb-1:27017,algashop-mongodb-2:27018,algashop-mongodb-3:27019/product_catalog?replicaSet=rs0
 
