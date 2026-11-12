@@ -16,7 +16,7 @@ spring:
         enabled: true
         path-style-access-enabled: true
   cache:
-    type: redis
+    type: none # redis
   mongodb:
     uri: ${catalog.params.mongodb.uri}
   data:
@@ -32,12 +32,12 @@ spring:
         jwt:
           issuer-uri: ${shared.params.auth-server-url}
 
-logging:
-  level:
-    org.mongodb.driver.protocol.command: DEBUG
-    #    org.mongodb.driver.protocol.query: DEBUG
-    #    org.mongodb.driver.connection: DEBUG
-    org.mongodb.driver.cluster: OFF
+# logging:
+#   level:
+#     org.mongodb.driver.protocol.command: DEBUG
+#     #    org.mongodb.driver.protocol.query: DEBUG
+#     #    org.mongodb.driver.connection: DEBUG
+#     org.mongodb.driver.cluster: OFF
 
 algashop:
   data-load:
