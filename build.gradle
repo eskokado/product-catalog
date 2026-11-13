@@ -193,6 +193,20 @@ jacocoTestCoverageVerification {
 	}
 }
 
+bootJar {
+    archiveFileName = 'product-catalog.jar'
+    exclude '.opencode/**', '.agents/**'
+}
+
+tasks.register('dockerBuild', Exec) {
+    description = 'Builds a multi-platform Docker image using Buildx'
+    group = 'build'
+    dependsOn('bootJar')
+    workingDir project.rootDir
+    commandLine 'docker', 'buildx', 'build', '--platform', 'linux/arm64/v8,linux/amd64',
+            '--tag', 'algashop/product-catalog:dev', '.'
+}
+
 asciidoctor {
   configurations 'asciidoctorExt'
 	dependsOn contractTest
