@@ -51,14 +51,31 @@ class ProductControllerTest {
     }
 
     @Test
-    void shouldFindByIdDelegatingToQueryService() {
+    void shouldFindByIdDelegatingToQueryService() throws InterruptedException {
         UUID productId = UUID.randomUUID();
         ProductDetailOutput output = ProductDetailOutputTestDataBuilder.aProduct()
                 .id(productId)
                 .build();
         Mockito.when(productQueryService.findById(productId)).thenReturn(output);
 
-        assertThat(controller.findById(productId).getBody()).isSameAs(output);
+        assertThat(controller.findById(productId, 0, 0).getBody()).isSameAs(output);
+    }
+
+    @Test
+    void shouldFailOnlyForTheConfiguredFirstAttempts() throws InterruptedException {
+        UUID productId = UUID.randomUUID();
+        ProductDetailOutput output = ProductDetailOutputTestDataBuilder.aProduct()
+                .id(productId)
+                .build();
+        Mockito.when(productQueryService.findById(productId)).thenReturn(output);
+
+        assertThatThrownBy(() -> controller.findById(productId, 2, 0))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Fake exception");
+        assertThatThrownBy(() -> controller.findById(productId, 2, 0))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Fake exception");
+        assertThat(controller.findById(productId, 2, 0).getBody()).isSameAs(output);
     }
 
     @Test
